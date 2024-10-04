@@ -2,27 +2,28 @@
 
 public class BandDecoder
 {
-    public int BandNumber { get; set; }
+    public int BandNumber { get; private set; }
 
     public void DecodeBand(string? frequency)
     {
-        if (frequency == null) return;
-        var freq = int.Parse(frequency);
-
-        if (string.IsNullOrEmpty(frequency)) return;
+        if (!long.TryParse(frequency, out var freq))
+        {
+            BandNumber = 0;
+            return;
+        }
 
         BandNumber = freq switch
         {
-            >= 1810000 and <= 2000000 => 0,
-            >= 3500000 and <= 3800000 => 1,
-            >= 7000000 and <= 7200000 => 2,
-            >= 10100000 and <= 10150000 => 3,
-            >= 14000000 and <= 14350000 => 4,
-            >= 18068000 and <= 18168000 => 5,
-            >= 21000000 and <= 21450000 => 6,
-            >= 24890000 and <= 24990000 => 7,
-            >= 28000000 and <= 29700000 => 8,
-            >= 50000000 and <= 54000000 => 9,
+            >= 1_810_000 and <= 2_000_000 => 1,
+            >= 3_500_000 and <= 3_800_000 => 2,
+            >= 7_000_000 and <= 7_200_000 => 3,
+            >= 10_100_000 and <= 10_150_000 => 4,
+            >= 14_000_000 and <= 14_350_000 => 5,
+            >= 18_068_000 and <= 18_168_000 => 6,
+            >= 21_000_000 and <= 21_450_000 => 7,
+            >= 24_890_000 and <= 24_990_000 => 8,
+            >= 28_000_000 and <= 29_700_000 => 9,
+            >= 50_000_000 and <= 54_000_000 => 10,
             _ => 0
         };
     }
