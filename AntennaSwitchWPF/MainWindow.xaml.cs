@@ -129,13 +129,13 @@ public partial class MainWindow : IDisposable
         }
     }
 
-    private List<int> _availableAntennas = [];
+    public List<int> AvailableAntennas = [];
 
     private async Task UpdateAvailableAntennasAsync()
     {
         try
         {
-            _availableAntennas = await _relayManager.GetRelaysForBandAsync(_bandDecoder.BandNumber, _antennaConfigs.ToList());
+            AvailableAntennas = await _relayManager.GetRelaysForBandAsync(_bandDecoder.BandNumber, _antennaConfigs.ToList());
             UpdateAntennaSelectionUi();
         }
         catch (Exception ex)
@@ -149,7 +149,7 @@ public partial class MainWindow : IDisposable
         try
         {
             await _relayManager.SetRelayForAntennaAsync(relayId, _bandDecoder.BandNumber);
-            UpdateCurrentlySelectedRelay();
+            UpdateCurrentlySelectedRelayLabel();
         }
         catch (Exception ex)
         {
@@ -159,22 +159,23 @@ public partial class MainWindow : IDisposable
 
     private void UpdateAntennaSelectionUi()
     {
-        AntennaSelectionComboBox.ItemsSource = _availableAntennas;
-        AntennaSelectionComboBox.SelectedItem = null;
-        AntennaSelectionComboBox.IsEnabled = _availableAntennas.Count > 1;
+        var currentlySelected = AntennaSelectionComboBox.SelectedItem;
+        AntennaSelectionComboBox.ItemsSource = AvailableAntennas;
+        AntennaSelectionComboBox.SelectedItem = AvailableAntennas.Contains(currentlySelected) 
+            ? currentlySelected 
+            : (AvailableAntennas.Contains(_selectedPort) ? _selectedPort : (AvailableAntennas.Any() ? AvailableAntennas.First() : null));
+        AntennaSelectionComboBox.IsEnabled = AvailableAntennas.Count > 1;
+        AntennaSelectionComboBox.Visibility = AvailableAntennas.Count > 1 ? Visibility.Visible : Visibility.Hidden;
     }
 
-    private void UpdateCurrentlySelectedRelay()
-    {
-        CurrentlySelectedRelayLabel.Text = _relayManager.CurrentlySelectedRelay.ToString();
-        AntennaSelectionComboBox.SelectedItem = _relayManager.CurrentlySelectedRelay;
-    }
+    private void UpdateCurrentlySelectedRelayLabel() => CurrentlySelectedRelayLabel.Text = _relayManager.CurrentlySelectedRelay.ToString();
 
     private async void AntennaSelectionComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (AntennaSelectionComboBox.SelectedItem is int selectedRelay)
         {
             await SetAntennaAsync(selectedRelay);
+            AntennaSelectionComboBox.SelectedItem = selectedRelay;
         }
     }
 
@@ -185,30 +186,36 @@ public partial class MainWindow : IDisposable
         BandLabel.Text = bandName;
         Console.WriteLine($"Band name set to {bandName}");
 
-        var availableAntennas = await _relayManager.GetRelaysForBandAsync(bandNumber, _antennaConfigs.ToList());
-        Console.WriteLine($"Available antennas: {string.Join(", ", availableAntennas)}");
+        AvailableAntennas = await _relayManager.GetRelaysForBandAsync(bandNumber, _antennaConfigs.ToList());
+        Console.WriteLine($"Available antennas: {string.Join(", ", AvailableAntennas)}");
 
-        if (availableAntennas.Any())
+        if (AvailableAntennas.Count != 0)
         {
             int lastSelectedRelay = _relayManager.GetLastSelectedRelayForBand(bandNumber);
             Console.WriteLine($"Last selected relay: {lastSelectedRelay}");
 
-            _selectedPort = lastSelectedRelay != 0 && availableAntennas.Contains(lastSelectedRelay)
+            _selectedPort = lastSelectedRelay != 0 && AvailableAntennas.Contains(lastSelectedRelay)
                 ? lastSelectedRelay
-                : availableAntennas.First();
+                : AvailableAntennas.First();
             Console.WriteLine($"Selected port: {_selectedPort}");
             
             await _relayManager.SetRelayForAntennaAsync(_selectedPort, bandNumber);
             Console.WriteLine("SetRelayForAntennaAsync completed");
 
             PortLabel.Text = _selectedPort.ToString();
-            UpdateCurrentlySelectedRelay();
+            if (_relayManager.CurrentlySelectedRelay.ToString() != CurrentlySelectedRelayLabel.Text)
+            {
+                UpdateCurrentlySelectedRelayLabel();
+            }
+            
+            AntennaSelectionComboBox.SelectedItem = _selectedPort;
         }
         else
         {
             _selectedPort = 0;
             PortLabel.Text = "N/A";
             Console.WriteLine("No available antennas");
+            AntennaSelectionComboBox.SelectedItem = null;
         }
 
         UpdateBandButtons(bandNumber);

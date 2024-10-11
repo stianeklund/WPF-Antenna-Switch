@@ -29,12 +29,15 @@ public class FakeTS590SG : IDisposable
 
     public async Task StartAsync(int port)
     {
-        _cts = new CancellationTokenSource();
-        _tcpListener = new TcpListener(IPAddress.Any, port);
-        _tcpListener.Start();
-        _listeningTask = ListenForConnectionsAsync(_cts.Token);
-        
-        Console.WriteLine($"FakeTS590SG started on port {port}");
+        await Task.Run(() =>
+        {
+            _cts = new CancellationTokenSource();
+            _tcpListener = new TcpListener(IPAddress.Any, port);
+            _tcpListener.Start();
+            _listeningTask = ListenForConnectionsAsync(_cts.Token);
+
+            Console.WriteLine($"FakeTS590SG started on port {port}");
+        });
     }
 
     private async Task ListenForConnectionsAsync(CancellationToken cancellationToken)

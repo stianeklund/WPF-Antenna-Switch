@@ -252,7 +252,7 @@
                             </Grid.RowDefinitions>
 
                             <!-- Band Buttons -->
-                            <Grid Grid.Row="0" Grid.ColumnSpan="4" Margin="0,0,0,20">
+                            <Grid Grid.Row="0" Grid.ColumnSpan="4" Margin="5,5,5,30">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="*"/>
@@ -261,8 +261,8 @@
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="40"/>
+                                    <RowDefinition Height="40"/>
                                 </Grid.RowDefinitions>
                                 <Button x:Name="Band160M" Content="160m" Grid.Column="0" Grid.Row="0" Margin="3" />
                                 <Button x:Name="Band80M" Content="80m" Grid.Column="1" Grid.Row="0" Margin="3" />
@@ -304,7 +304,8 @@
                             <!-- Available Antennas and Selected Relay -->
                             <TextBlock Text="Available Antennas:" FontWeight="SemiBold" Grid.Row="5" Grid.Column="0" Margin="0,0,10,10" Foreground="#0078D4" />
                             <ComboBox x:Name="AntennaSelectionComboBox" Grid.Row="5" Grid.Column="1" Margin="0,0,0,10" SelectionChanged="AntennaSelectionComboBox_SelectionChanged"
-                                      Background="#2D2D30" Foreground="#E0E0E0" BorderBrush="#3F3F3F">
+                                      Background="#2D2D30" Foreground="#E0E0E0" BorderBrush="#3F3F3F"
+                                      d:DataContext="{d:DesignInstance local:MainWindow }">
                                 <ComboBox.ItemContainerStyle>
                                     <Style TargetType="ComboBoxItem">
                                         <Setter Property="Background" Value="#2D2D30" />
