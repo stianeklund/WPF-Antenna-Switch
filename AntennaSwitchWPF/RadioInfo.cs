@@ -1,6 +1,6 @@
 ﻿namespace AntennaSwitchWPF;
 
-public class RadioInfo
+public class RadioInfo : INotifyPropertyChanged
 {
     public string? RxFrequency { get; set; }
     public string? TxFrequency { get; set; }

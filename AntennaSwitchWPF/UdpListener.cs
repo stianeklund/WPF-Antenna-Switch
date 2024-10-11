@@ -1,8 +1,8 @@
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Xml;
-using System.IO;
 
 namespace AntennaSwitchWPF;
 
@@ -53,16 +53,13 @@ public class UdpListener : IDisposable
         _cts?.CancelAsync();
         try
         {
-
             _cts = new CancellationTokenSource();
             if (!IPAddress.TryParse(addressOrHostname, out var ipAddress))
             {
                 // If it's not a valid IP address, assume it's a hostname and resolve it
-                IPAddress[] addresses = await Dns.GetHostAddressesAsync(addressOrHostname);
+                var addresses = await Dns.GetHostAddressesAsync(addressOrHostname);
                 if (addresses.Length == 0)
-                {
                     throw new ArgumentException($"Unable to resolve hostname: {addressOrHostname}");
-                }
 
                 ipAddress = addresses[0]; // Use the first resolved IP address
             }
@@ -76,7 +73,7 @@ public class UdpListener : IDisposable
             }
             catch (SocketException e)
             {
-                string errorMessage = $"Error binding to {ipAddress}:{port}. ";
+                var errorMessage = $"Error binding to {ipAddress}:{port}. ";
                 errorMessage += e.SocketErrorCode switch
                 {
                     SocketError.AddressAlreadyInUse => "The address is already in use.",
@@ -93,7 +90,7 @@ public class UdpListener : IDisposable
     }
 
     /// <summary>
-    /// Listens for UDP messages from N1MM or similar software
+    ///     Listens for UDP messages from N1MM or similar software
     /// </summary>
     /// <param name="cancellationToken"></param>
     private async Task ListenAsync(CancellationToken cancellationToken)
@@ -124,39 +121,16 @@ public class UdpListener : IDisposable
     {
         try
         {
-            // DebugLog($"Received message: {message}");
-            using var reader = XmlReader.Create(new StringReader(message));
             var radioInfo = new RadioInfo();
 
-            while (reader.Read())
-            {
-                if (reader.NodeType == XmlNodeType.Element)
-                {
-                    switch (reader.Name)
-                    {
-                        case "Freq":
-                            radioInfo.RxFrequency = reader.ReadElementContentAsString();
-                            break;
-                        case "TXFreq":
-                            radioInfo.TxFrequency = reader.ReadElementContentAsString();
-                            break;
-                        case "Mode":
-                            radioInfo.Mode = reader.ReadElementContentAsString();
-                            break;
-                        case "IsSplit":
-                            radioInfo.IsSplit = reader.ReadElementContentAsBoolean();
-                            break;
-                        case "ActiveRadioNr":
-                            radioInfo.ActiveRadio = reader.ReadElementContentAsInt();
-                            break;
-                        case "IsTransmitting":
-                            radioInfo.IsTransmitting = reader.ReadElementContentAsBoolean();
-                            break;
-                    }
-                }
-            }
+            // Use regular expressions to extract the values we need
+            radioInfo.RxFrequency = ExtractValue(message, "Freq");
+            radioInfo.TxFrequency = ExtractValue(message, "TXFreq");
+            radioInfo.Mode = ExtractValue(message, "Mode");
+            radioInfo.IsSplit = bool.TryParse(ExtractValue(message, "IsSplit"), out var isSplit) && isSplit;
+            radioInfo.ActiveRadio = int.TryParse(ExtractValue(message, "ActiveRadioNr"), out var activeRadio) ? activeRadio : null;
+            radioInfo.IsTransmitting = bool.TryParse(ExtractValue(message, "IsTransmitting"), out var isTransmitting) && isTransmitting;
 
-            //DebugLog(radioInfo);
             UpdateFields(radioInfo);
             RadioInfoReceived?.Invoke(this, radioInfo);
         }
@@ -164,6 +138,12 @@ public class UdpListener : IDisposable
         {
             DebugLog($"Error parsing XML message: {ex.Message}");
         }
+    }
+
+    private static string? ExtractValue(string xml, string elementName)
+    {
+        var match = System.Text.RegularExpressions.Regex.Match(xml, $@"<{elementName}>([^<]*)</{elementName}>");
+        return match.Success ? match.Groups[1].Value : null;
     }
 
     private void UpdateFields(RadioInfo info)
