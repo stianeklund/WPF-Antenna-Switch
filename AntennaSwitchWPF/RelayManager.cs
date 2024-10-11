@@ -1,4 +1,6 @@
 using System.Collections.Concurrent;
+using System.Timers;
+using Timer = System.Timers.Timer;
 
 namespace AntennaSwitchWPF;
 
@@ -9,6 +11,9 @@ internal class RelayManager : IDisposable
     private readonly ConcurrentDictionary<int, List<int>> _bandToRelaysCache = new();
     private readonly ConcurrentDictionary<int, int> _lastSelectedRelayForBand = new();
     private readonly SemaphoreSlim _semaphore = new(1, 1);
+    private readonly Timer _cooldownTimer;
+    private DateTime _lastBandChangeTime;
+    private const int CooldownPeriodMs = 500; // 500ms cooldown
 
     public RelayManager(UdpMessageSender sender)
     {
@@ -17,9 +22,13 @@ internal class RelayManager : IDisposable
         {
             _relayStates[i] = false;
         }
+        _cooldownTimer = new Timer(CooldownPeriodMs);
+        _cooldownTimer.Elapsed += (sender, e) => _cooldownTimer.Stop();
+        _lastBandChangeTime = DateTime.MinValue;
     }
 
     public int CurrentlySelectedRelay { get; private set; }
+    public bool IsCoolingDown => _cooldownTimer.Enabled;
 
     public async Task TurnOffAllRelays(CancellationToken cancellationToken = default)
     {
@@ -108,11 +117,26 @@ internal class RelayManager : IDisposable
         {
             if (CurrentlySelectedRelay != relayId)
             {
+                if (IsCoolingDown)
+                {
+                    // If we're in cooldown, don't change the relay
+                    return;
+                }
+
+                var now = DateTime.UtcNow;
+                if ((now - _lastBandChangeTime).TotalMilliseconds < CooldownPeriodMs)
+                {
+                    // If we're trying to change too quickly, start the cooldown timer
+                    _cooldownTimer.Start();
+                    return;
+                }
+
                 _semaphore.Release();
                 await TurnOffAllRelays(cancellationToken);
                 await SetRelayAsync(relayId, true, cancellationToken);
                 await _semaphore.WaitAsync(cancellationToken);
                 _lastSelectedRelayForBand[bandNumber] = relayId;
+                _lastBandChangeTime = now;
             }
         }
         finally
@@ -170,5 +194,6 @@ internal class RelayManager : IDisposable
     {
         _sender.Dispose();
         _semaphore.Dispose();
+        _cooldownTimer.Dispose();
     }
 }
