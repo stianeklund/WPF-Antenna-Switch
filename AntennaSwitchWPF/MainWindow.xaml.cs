@@ -16,7 +16,7 @@ public partial class MainWindow : IDisposable
 {
     private readonly ObservableCollection<AntennaConfig> _antennaConfigs;
     private readonly BandDecoder _bandDecoder;
-    private readonly FakeTS590SG? _fakeTs590Sg;
+    private readonly FakeTs590Sg? _fakeTs590Sg;
     private readonly RelayManager _relayManager;
     private readonly Settings _settings;
     private readonly UdpListener _udpListener;
@@ -31,28 +31,24 @@ public partial class MainWindow : IDisposable
         try
         {
             InitializeComponent();
+            _settings = new Settings();
             _bandDecoder = new BandDecoder();
-            _udpListener = new UdpListener();
 
             _antennaConfigs = new ObservableCollection<AntennaConfig>();
             for (var i = 1; i <= 8; i++) _antennaConfigs.Add(new AntennaConfig { Port = $"{i}" });
+            LoadConfigFromFile();
+
+            _udpListener = new UdpListener();
 
             PortGrid.ItemsSource = _antennaConfigs;
-            ((INotifyCollectionChanged)_antennaConfigs).CollectionChanged += AntennaConfigs_CollectionChanged;
-            foreach (var config in _antennaConfigs)
-            {
-                config.PropertyChanged += AntennaConfig_PropertyChanged;
-            }
 
-            _fakeTs590Sg = new FakeTS590SG(_udpListener);
+            _fakeTs590Sg = new FakeTs590Sg(_udpListener);
             _ = _fakeTs590Sg.StartAsync(4532);
 
-            _settings = new Settings();
             DataContext = _settings;
 
             Loaded += MainWindow_Loaded;
             Closing += MainWindow_Closing;
-            LoadConfigFromFile();
             _udpMessageSender = !string.IsNullOrEmpty(_settings.AntennaSwitchIpAddress)
                 ? new UdpMessageSender(_settings.AntennaSwitchIpAddress, _settings.AntennaSwitchPort)
                 : new UdpMessageSender("10.0.0.12", 12090);
@@ -470,6 +466,7 @@ public partial class MainWindow : IDisposable
         if (!File.Exists("config.json"))
         {
             SaveConfigToFile();
+            LoadConfigFromFile();
             return;
         }
 

@@ -5,20 +5,20 @@ using System.Text;
 
 namespace AntennaSwitchWPF;
 
-public class FakeTS590SG : IDisposable
+public class FakeTs590Sg : IDisposable
 {
     private readonly UdpListener _udpListener;
     private TcpListener? _tcpListener;
     private CancellationTokenSource? _cts;
     private Task? _listeningTask;
 
-    public FakeTS590SG(UdpListener udpListener)
+    public FakeTs590Sg(UdpListener udpListener)
     {
         _udpListener = udpListener;
         _udpListener.RadioInfoReceived += OnRadioInfoReceived;
     }
 
-    private RadioInfo _lastReceivedInfo = new RadioInfo();
+    private RadioInfo _lastReceivedInfo = new();
 
     private void OnRadioInfoReceived(object? sender, RadioInfo e)
     {
@@ -101,7 +101,7 @@ public class FakeTS590SG : IDisposable
         Console.WriteLine("Client disconnected");
     }
 
-    private string ProcessCommand(string command)
+    internal string ProcessCommand(string command)
     {
         return command switch
         {
@@ -124,7 +124,7 @@ public class FakeTS590SG : IDisposable
         };
     }
 
-    private string GenerateIfResponse()
+    internal string GenerateIfResponse()
     {
         var vfoAFreq = _lastReceivedInfo.RxFrequency?.PadLeft(11, '0') ?? "00000000000";
         var spaces = "     "; // 5 spaces
