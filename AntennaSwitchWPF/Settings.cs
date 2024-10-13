@@ -1,6 +1,6 @@
 namespace AntennaSwitchWPF;
 
-public sealed class Settings
+public sealed class Settings 
 {
     public int AntennaPortCount { get; set; } = 1;
 
@@ -13,4 +13,8 @@ public sealed class Settings
     public string AntennaSwitchIpAddress { get; set; } = string.Empty;
 
     public int AntennaSwitchPort { get; set; }
+    public string? MqttBrokerAddress { get; set; }
+    public int? MqttBrokerPort { get; set; }
+    public string? MqttUsername { get; set; }
+    public string? MqttPassword { get; set; }
 }

@@ -1,0 +1,15 @@
+{
+  "AntennaConfigs": [],
+  "Settings": {
+    "BandDataIpAddress": "",
+    "BandDataIpPort": 0,
+    "AntennaSwitchIpAddress": "",
+    "AntennaSwitchPort": 0,
+    "AntennaPortCount": 0,
+    "HasMultipleInputs": false,
+    "MqttBrokerAddress": "localhost",
+    "MqttBrokerPort": 1883,
+    "MqttUsername": "",
+    "MqttPassword": ""
+  }
+}

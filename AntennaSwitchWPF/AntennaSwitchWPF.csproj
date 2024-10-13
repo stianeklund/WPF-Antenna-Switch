@@ -10,6 +10,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="MQTTnet.Extensions.ManagedClient" Version="4.3.7.1207" />
         <PackageReference Include="System.Net.Sockets" Version="4.3.0"/>
         <PackageReference Include="xunit" Version="2.9.2" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.0"/>
@@ -19,6 +20,7 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="MQTTnet" Version="4.3.7.1207" />
     </ItemGroup>
 
 </Project>

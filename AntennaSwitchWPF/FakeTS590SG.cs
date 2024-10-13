@@ -18,13 +18,13 @@ public class FakeTs590Sg : IDisposable
         _udpListener.RadioInfoReceived += OnRadioInfoReceived;
     }
 
-    private RadioInfo _lastReceivedInfo = new();
+    public RadioInfo _lastReceivedInfo = new();
 
     private void OnRadioInfoReceived(object? sender, RadioInfo e)
     {
         // Update internal state when new radio info is received
         _lastReceivedInfo = e;
-        // Console.WriteLine($"FakeTS590SG received new radio info: RX={e.RxFrequency}, TX={e.TxFrequency}, Mode={e.Mode}, Split={e.IsSplit}, Transmitting={e.IsTransmitting}");
+        Console.WriteLine($"FakeTS590SG received new radio info: RX={e.Freq}, TX={e.TxFreq}, Mode={e.Mode}, Split={e.IsSplit}, Transmitting={e.IsTransmitting}");
     }
 
     public async Task StartAsync(int port)
@@ -110,8 +110,8 @@ public class FakeTs590Sg : IDisposable
             "ID;" => "ID023;",
             "FV;" => "FV1.04;",
             "TY;" => "TYK 00;",
-            "FA;" => $"FA{_lastReceivedInfo.RxFrequency?.PadLeft(11, '0') ?? "00000000000"};",
-            "FB;" => $"FB{_lastReceivedInfo.TxFrequency?.PadLeft(11, '0') ?? "00000000000"};",
+            "FA;" => $"FA{_lastReceivedInfo.Freq.ToString().PadLeft(11, '0')};",
+            "FB;" => $"FB{_lastReceivedInfo.TxFreq.ToString().PadLeft(11, '0')};",
             "MD;" => $"MD{ConvertModeToTs590Sg(_lastReceivedInfo.Mode)};",
             "TX;" => $"TX{(_lastReceivedInfo.IsTransmitting ? "1" : "0")};",
             "SP;" => $"SP{(_lastReceivedInfo.IsSplit ? "1" : "0")};",
@@ -126,7 +126,7 @@ public class FakeTs590Sg : IDisposable
 
     internal string GenerateIfResponse()
     {
-        var vfoAFreq = _lastReceivedInfo.RxFrequency?.PadLeft(11, '0') ?? "00000000000";
+        var vfoAFreq = _lastReceivedInfo.Freq.ToString().PadLeft(11, '0');
         var spaces = "     "; // 5 spaces
         var ritXitFrequency = "00000"; // Assuming no RIT/XIT for now
         var ritState = "0";

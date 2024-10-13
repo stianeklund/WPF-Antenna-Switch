@@ -332,7 +332,7 @@
             <TabItem Header="Settings" FontSize="16" FontWeight="SemiBold">
                 <Border BorderBrush="#3F3F3F" BorderThickness="1" CornerRadius="8" Margin="20" Padding="20"
                         Background="#2D2D30" VerticalAlignment="Stretch">
-                    <Grid d:DataContext="{d:DesignInstance local:Settings }">
+                    <Grid d:DataContext="{d:DesignInstance local:Settings }" Margin="10">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
@@ -341,46 +341,58 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Text="Connection Settings" FontSize="22" FontWeight="SemiBold" Grid.ColumnSpan="2"
+                        <TextBlock Text="Connection Settings" FontSize="22" FontWeight="SemiBold" Grid.ColumnSpan="4"
                                    Margin="0,0,0,20" Foreground="#0078D4" />
 
                         <Label Content="N1MM+ IP Address:" Grid.Row="1" Grid.Column="0" Margin="0,5,10,5" />
                         <TextBox Text="{Binding BandDataIpAddress, UpdateSourceTrigger=PropertyChanged}" Grid.Row="1"
-                                 Grid.Column="1" Margin="0,5,0,5" />
+                                 Grid.Column="1" Margin="0,5,10,5" />
 
-                        <Label Content="N1MM+ Port:" Grid.Row="2" Grid.Column="0" Margin="0,5,10,5" />
-                        <TextBox Text="{Binding BandDataIpPort, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2"
-                                 Grid.Column="1" Margin="0,5,0,5" />
+                        <Label Content="N1MM+ Port:" Grid.Row="1" Grid.Column="2" Margin="0,5,10,5" />
+                        <TextBox Text="{Binding BandDataIpPort, UpdateSourceTrigger=PropertyChanged}" Grid.Row="1"
+                                 Grid.Column="3" Margin="0,5,0,5" />
 
-                        <Label Content="Port Switch IP Address:" Grid.Row="3" Grid.Column="0" Margin="0,5,10,5" />
+                        <Label Content="Port Switch IP Address:" Grid.Row="2" Grid.Column="0" Margin="0,5,10,5" />
                         <TextBox Text="{Binding AntennaSwitchIpAddress, UpdateSourceTrigger=PropertyChanged}"
-                                 Grid.Row="3" Grid.Column="1" Margin="0,5,0,5" />
+                                 Grid.Row="2" Grid.Column="1" Margin="0,5,10,5" />
 
-                        <Label Content="Port Switch Port:" Grid.Row="4" Grid.Column="0" Margin="0,5,10,5" />
+                        <Label Content="Port Switch Port:" Grid.Row="2" Grid.Column="2" Margin="0,5,10,5" />
                         <TextBox Text="{Binding AntennaSwitchPort, UpdateSourceTrigger=PropertyChanged}"
-                                 Grid.Row="4" Grid.Column="1" Margin="0,5,0,5" />
+                                 Grid.Row="2" Grid.Column="3" Margin="0,5,0,5" />
 
-                        <Label Content="Number of ports:" Grid.Row="5" Grid.Column="0" Margin="0,5,10,5" />
-                        <TextBox Text="{Binding AntennaPortCount, UpdateSourceTrigger=PropertyChanged}" Grid.Row="5"
-                                 Grid.Column="1" Margin="0,5,0,5" ToolTip="The number of antenna ports on your switch"/>
+                        <Label Content="MQTT Broker Address:" Grid.Row="3" Grid.Column="0" Margin="0,5,10,5" />
+                        <TextBox Text="{Binding MqttBrokerAddress, UpdateSourceTrigger=PropertyChanged}"
+                                 Grid.Row="3" Grid.Column="1" Margin="0,5,10,5" />
 
-                        <Label Content="Multiple Inputs:" Grid.Row="6" Grid.Column="0" Margin="0,5,10,5" />
+                        <Label Content="MQTT Broker Port:" Grid.Row="3" Grid.Column="2" Margin="0,5,10,5" />
+                        <TextBox Text="{Binding MqttBrokerPort, UpdateSourceTrigger=PropertyChanged}"
+                                 Grid.Row="3" Grid.Column="3" Margin="0,5,0,5" />
+
+                        <Label Content="Number of ports:" Grid.Row="4" Grid.Column="0" Margin="0,5,10,5" />
+                        <TextBox Text="{Binding AntennaPortCount, UpdateSourceTrigger=PropertyChanged}" Grid.Row="4"
+                                 Grid.Column="1" Margin="0,5,10,5" ToolTip="The number of antenna ports on your switch"/>
+
+                        <Label Content="Multiple Inputs:" Grid.Row="4" Grid.Column="2" Margin="0,5,10,5" />
                         <CheckBox IsChecked="{Binding HasMultipleInputs, UpdateSourceTrigger=PropertyChanged}" 
-                                  Grid.Row="6" Grid.Column="1" Margin="0,5,0,5" VerticalAlignment="Center"
+                                  Grid.Row="4" Grid.Column="3" Margin="0,5,0,5" VerticalAlignment="Center"
                                   ToolTip="Check if your antenna switch has multiple inputs"/>
 
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                                    Grid.Row="7" Grid.Column="1"
+                                    Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="4"
                                     Margin="0,20,0,0">
-                            <Button Content="Save" Width="100" Margin="5,0" Click="SaveSettingsConfig_Click" />
-                            <Button Content="Cancel" Width="100" Margin="5,0" Click="CancelSettingsConfig_Click" />
+                            <Button Content="Save" Width="100" Margin="0,0,10,0" Click="SaveSettingsConfig_Click" />
+                            <Button Content="Cancel" Width="100" Margin="0" Click="CancelSettingsConfig_Click" />
                         </StackPanel>
                     </Grid>
                 </Border>

@@ -33,11 +33,11 @@ public class UdpListener : IDisposable
     private static void DebugLog(RadioInfo info)
     {
         Console.Write($"[UdpListener] {DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}: " +
-                      $"RX: {info.RxFrequency}  " +
-                      $"TX: {info.TxFrequency}  " +
+                      $"RX: {info.Freq}  " +
+                      $"TX: {info.TxFreq}  " +
                       $"Mode: {info.Mode}  " +
                       $"Split: {info.IsSplit}  " +
-                      $"Active Radio: {info.ActiveRadio}  " +
+                      $"Active Radio: {info.ActiveRadioNr}  " +
                       $"Transmit: {info.IsTransmitting}  ");
     }
 
@@ -121,15 +121,16 @@ public class UdpListener : IDisposable
     {
         try
         {
-            var radioInfo = new RadioInfo();
-
-            // Use regular expressions to extract the values we need
-            radioInfo.RxFrequency = ExtractValue(message, "Freq");
-            radioInfo.TxFrequency = ExtractValue(message, "TXFreq");
-            radioInfo.Mode = ExtractValue(message, "Mode");
-            radioInfo.IsSplit = bool.TryParse(ExtractValue(message, "IsSplit"), out var isSplit) && isSplit;
-            radioInfo.ActiveRadio = int.TryParse(ExtractValue(message, "ActiveRadioNr"), out var activeRadio) ? activeRadio : null;
-            radioInfo.IsTransmitting = bool.TryParse(ExtractValue(message, "IsTransmitting"), out var isTransmitting) && isTransmitting;
+            var radioInfo = new RadioInfo
+            {
+                // Use regular expressions to extract the values we need
+                Freq = int.TryParse(ExtractValue(message, "Freq"), out var freq) ? freq : 0,
+                TxFreq = int.TryParse(ExtractValue(message, "TXFreq"), out var s) ? s : 0,
+                Mode = ExtractValue(message, "Mode") ?? string.Empty,
+                IsSplit = bool.TryParse(ExtractValue(message, "IsSplit"), out var isSplit) && isSplit,
+                ActiveRadioNr = int.TryParse(ExtractValue(message, "ActiveRadioNr"), out var activeRadio) ? activeRadio : 0,
+                IsTransmitting = bool.TryParse(ExtractValue(message, "IsTransmitting"), out var isTransmitting) && isTransmitting
+            };
 
             UpdateFields(radioInfo);
             RadioInfoReceived?.Invoke(this, radioInfo);
@@ -148,10 +149,10 @@ public class UdpListener : IDisposable
 
     private void UpdateFields(RadioInfo info)
     {
-        RxFrequency = info.RxFrequency;
-        TxFrequency = info.IsSplit ? info.TxFrequency : info.RxFrequency;
+        RxFrequency = info.Freq.ToString();
+        TxFrequency = info.IsSplit ? info.TxFreq.ToString(): info.Freq.ToString();
         Mode = info.Mode;
-        ActiveRadio = info.ActiveRadio;
+        ActiveRadio = info.ActiveRadioNr;
         IsSplit = info.IsSplit;
         IsTransmitting = info.IsTransmitting;
     }

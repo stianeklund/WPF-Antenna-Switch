@@ -6,6 +6,9 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using MQTTnet;
+using MQTTnet.Client;
+using MQTTnet.Extensions.ManagedClient;
 
 namespace AntennaSwitchWPF;
 
@@ -16,13 +19,21 @@ public partial class MainWindow : IDisposable
 {
     private readonly ObservableCollection<AntennaConfig> _antennaConfigs;
     private readonly BandDecoder _bandDecoder;
-    private readonly FakeTs590Sg? _fakeTs590Sg;
+    private readonly FakeTs590Sg _fakeTs590Sg;
     private readonly RelayManager _relayManager;
     private readonly Settings _settings;
     private readonly UdpListener _udpListener;
     private readonly UdpMessageSender _udpMessageSender;
     private readonly SemaphoreSlim _updateSemaphore = new(1, 1);
     private int _selectedPort;
+    private IManagedMqttClient _mqttClient;
+    private RadioInfo _radioInfo;
+
+    private static readonly string SystemPath = Environment.GetFolderPath(
+        Environment.SpecialFolder.CommonApplicationData
+    );
+
+    private readonly string _path = Path.Combine(SystemPath, "AntennaSwitchManager", "config.json");
 
     public List<int> AvailableAntennas = [];
 
@@ -37,6 +48,7 @@ public partial class MainWindow : IDisposable
             _antennaConfigs = new ObservableCollection<AntennaConfig>();
             for (var i = 1; i <= 8; i++) _antennaConfigs.Add(new AntennaConfig { Port = $"{i}" });
             LoadConfigFromFile();
+
 
             _udpListener = new UdpListener();
 
@@ -56,6 +68,12 @@ public partial class MainWindow : IDisposable
             _relayManager = new RelayManager(_udpMessageSender);
             _ = _relayManager.TurnOffAllRelays();
             _udpListener.RadioInfoReceived += OnRadioInfoReceived;
+
+            _radioInfo = new RadioInfo();
+            InitializeMqttClient();
+            
+            // Add this line to subscribe to MQTT messages
+            _mqttClient.ApplicationMessageReceivedAsync += HandleMqttMessageReceived;
         }
         catch (Exception ex)
         {
@@ -64,6 +82,87 @@ public partial class MainWindow : IDisposable
                 "Initialization Error", MessageBoxButton.OK, MessageBoxImage.Error);
             Console.WriteLine($"Error initializing the application: {ex}");
         }
+    }
+
+    private async void InitializeMqttClient()
+    {
+        var mqttFactory = new MqttFactory();
+        _mqttClient = mqttFactory.CreateManagedMqttClient();
+
+        try
+        {
+            var mqttClientOptionsBuilder = new MqttClientOptionsBuilder()
+                .WithTcpServer(_settings.MqttBrokerAddress, _settings.MqttBrokerPort);
+
+            if (!string.IsNullOrEmpty(_settings.MqttUsername) && !string.IsNullOrEmpty(_settings.MqttPassword))
+            {
+                mqttClientOptionsBuilder.WithCredentials(_settings.MqttUsername, _settings.MqttPassword);
+            }
+
+            var mqttClientOptions = mqttClientOptionsBuilder.Build();
+
+            var managedMqttClientOptions = new ManagedMqttClientOptionsBuilder()
+                .WithClientOptions(mqttClientOptions)
+                .Build();
+
+            await _mqttClient.StartAsync(managedMqttClientOptions);
+
+            await _mqttClient.SubscribeAsync([new MqttTopicFilterBuilder()
+                .WithTopic("omnirig/sporadic/radio_info")
+                .WithQualityOfServiceLevel(MQTTnet.Protocol.MqttQualityOfServiceLevel.AtMostOnce)
+                .Build()]);
+
+            _mqttClient.ApplicationMessageReceivedAsync += HandleMqttMessageReceived;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error initializing MQTT client: {ex.Message}");
+        }
+    }
+
+    private Task HandleMqttMessageReceived(MqttApplicationMessageReceivedEventArgs arg)
+    {
+        var payload = arg.ApplicationMessage.PayloadSegment;
+        var message = System.Text.Encoding.UTF8.GetString(payload);
+        if (string.IsNullOrEmpty(message))
+        {
+            return Task.CompletedTask;
+        }
+
+        if (arg.ApplicationMessage.Topic.EndsWith("/radio_info"))
+        {
+            RadioInfo? newRadioInfo = JsonSerializer.Deserialize<RadioInfo>(message);
+            if (newRadioInfo != null)
+            {
+                // Console.WriteLine($"MQTT Msg received:{newRadioInfo}");
+                UpdateRadioInfo(newRadioInfo);
+                
+                // Update FakeTs590Sg with the new radio info
+                _fakeTs590Sg._lastReceivedInfo = newRadioInfo;
+            }
+        }
+        else if (arg.ApplicationMessage.Topic.EndsWith("/responses"))
+        {
+            // Handle command responses if needed
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private void UpdateRadioInfo(RadioInfo newInfo)
+    {
+        _radioInfo = newInfo;
+        Dispatcher.Invoke(() =>
+        {
+            UpdateRxFrequency(newInfo.Freq.ToString());
+            UpdateTxFrequency(newInfo.TxFreq.ToString());
+            UpdateMode(newInfo.Mode);
+            UpdateSplitStatus(newInfo.IsSplit);
+            UpdateActiveRadio(newInfo.ActiveRadioNr);
+            UpdateTransmitStatus(newInfo.IsTransmitting);
+            _bandDecoder.DecodeBand(newInfo.Freq.ToString());
+            UpdateAntennaSelection(_bandDecoder.BandNumber);
+        });
     }
 
     private void AntennaConfigs_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -135,6 +234,7 @@ public partial class MainWindow : IDisposable
         _fakeTs590Sg?.Dispose();
         _relayManager.Dispose();
         _updateSemaphore.Dispose();
+        _mqttClient?.Dispose();
     }
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -169,15 +269,16 @@ public partial class MainWindow : IDisposable
         {
             try
             {
-                _bandDecoder.DecodeBand(radioInfo.RxFrequency);
+                _bandDecoder.DecodeBand(radioInfo.Freq.ToString());
                 await UpdateAntennaSelection(_bandDecoder.BandNumber);
 
-                UpdateRxFrequency(radioInfo.RxFrequency ?? "N/A");
-                UpdateTxFrequency(radioInfo.TxFrequency ?? "N/A");
-                UpdateMode(radioInfo.Mode ?? "N/A");
+                UpdateRxFrequency(radioInfo.Freq.ToString());
+                UpdateTxFrequency(radioInfo.TxFreq.ToString());
+                UpdateMode(radioInfo.Mode);
                 UpdateSplitStatus(radioInfo.IsSplit);
-                UpdateActiveRadio(radioInfo.ActiveRadio);
+                UpdateActiveRadio(radioInfo.ActiveRadioNr);
                 UpdateTransmitStatus(radioInfo.IsTransmitting);
+                if (_fakeTs590Sg != null) _fakeTs590Sg._lastReceivedInfo = radioInfo;
             }
             catch (Exception ex)
             {
@@ -452,34 +553,58 @@ public partial class MainWindow : IDisposable
     {
         var config = new ConfigWrapper
         {
-            AntennaConfigs = [.._antennaConfigs],
-            Settings = _settings
+            AntennaConfigs = _antennaConfigs.Select(ac => new AntennaConfig
+            {
+                Port = ac.Port,
+                AntennaName = ac.AntennaName,
+                Description = ac.Description,
+                Is160M = ac.Is160M,
+                Is80M = ac.Is80M,
+                Is40M = ac.Is40M,
+                Is30M = ac.Is30M,
+                Is20M = ac.Is20M,
+                Is17M = ac.Is17M,
+                Is15M = ac.Is15M,
+                Is12M = ac.Is12M,
+                Is10M = ac.Is10M,
+                Is6M = ac.Is6M
+            }).ToList(),
+            Settings = new Settings
+            {
+                BandDataIpAddress = _settings.BandDataIpAddress,
+                BandDataIpPort = _settings.BandDataIpPort,
+                AntennaSwitchIpAddress = _settings.AntennaSwitchIpAddress,
+                AntennaSwitchPort = _settings.AntennaSwitchPort,
+                AntennaPortCount = _settings.AntennaPortCount,
+                HasMultipleInputs = _settings.HasMultipleInputs,
+                MqttBrokerAddress = _settings.MqttBrokerAddress,
+                MqttBrokerPort = _settings.MqttBrokerPort,
+                MqttUsername = _settings.MqttUsername,
+                MqttPassword = _settings.MqttPassword,
+            }
         };
 
         var options = new JsonSerializerOptions { WriteIndented = true };
         var jsonString = JsonSerializer.Serialize(config, options);
-        File.WriteAllText("config.json", jsonString);
+        
+        Directory.CreateDirectory(Path.GetDirectoryName(_path) ?? throw new InvalidOperationException(nameof(_path)));
+        File.WriteAllText(_path, jsonString);
     }
 
     private void LoadConfigFromFile()
     {
-        if (!File.Exists("config.json"))
+        if (!File.Exists(_path))
         {
             SaveConfigToFile();
-            LoadConfigFromFile();
             return;
         }
 
-        var jsonString = File.ReadAllText("config.json");
+        var jsonString = File.ReadAllText(_path);
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         var config = JsonSerializer.Deserialize<ConfigWrapper>(jsonString, options);
 
         if (config?.AntennaConfigs != null)
         {
-            foreach (var oldConfig in _antennaConfigs)
-            {
-                oldConfig.PropertyChanged -= AntennaConfig_PropertyChanged;
-            }
             _antennaConfigs.Clear();
             foreach (var antennaConfig in config.AntennaConfigs)
             {
@@ -499,7 +624,6 @@ public partial class MainWindow : IDisposable
                     Is10M = antennaConfig.Is10M,
                     Is6M = antennaConfig.Is6M
                 };
-                newConfig.PropertyChanged += AntennaConfig_PropertyChanged;
                 _antennaConfigs.Add(newConfig);
             }
         }
@@ -512,6 +636,11 @@ public partial class MainWindow : IDisposable
             _settings.AntennaSwitchPort = config.Settings.AntennaSwitchPort;
             _settings.AntennaPortCount = config.Settings.AntennaPortCount;
             _settings.HasMultipleInputs = config.Settings.HasMultipleInputs;
+            _settings.MqttBrokerAddress = config.Settings.MqttBrokerAddress;
+            _settings.MqttBrokerPort = config.Settings.MqttBrokerPort;
+            _settings.MqttUsername = config.Settings.MqttUsername;
+            _settings.MqttPassword = config.Settings.MqttPassword;
+
         }
 
         UpdateAvailableAntennas();
