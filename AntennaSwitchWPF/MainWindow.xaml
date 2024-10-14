@@ -5,8 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AntennaSwitchWPF"
         mc:Ignorable="d"
-        Title="Antenna jSwitch" Height="600" Width="800"
-        Background="#1E1E1E" d:DataContext="{d:DesignInstance local:AntennaConfig}"
+        Title="Antenna Switch" MinHeight="100" MinWidth="650"
+        SizeToContent="WidthAndHeight"
+        Background="#1E1E1E" d:DataContext="{d:DesignInstance Type=local:MainWindow}"
         WindowStartupLocation="CenterScreen">
     <Window.Effect>
         <DropShadowEffect ShadowDepth="0" BlurRadius="10" Opacity="0.5" />
@@ -209,244 +210,290 @@
         </ControlTemplate>
 
     </Window.Resources>
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
-        <Border Background="#0078D4" Grid.Row="0">
-            <TextBlock Text="Antenna Switch" FontSize="24" FontWeight="Bold" Foreground="White" Margin="20,10">
-                <TextBlock.Effect>
-                    <DropShadowEffect ShadowDepth="1" Direction="330" Color="Black" Opacity="0.5" BlurRadius="2" />
-                </TextBlock.Effect>
-            </TextBlock>
-        </Border>
+            <Border Background="#0078D4" Grid.Row="0">
+                <TextBlock Text="Antenna Switch" FontSize="24" FontWeight="Bold" Foreground="White" Margin="20,10">
+                    <TextBlock.Effect>
+                        <DropShadowEffect ShadowDepth="1" Direction="330" Color="Black" Opacity="0.5" BlurRadius="2" />
+                    </TextBlock.Effect>
+                </TextBlock>
+            </Border>
 
-        <TabControl Grid.Row="1" Background="#1E1E1E" Margin="2" Foreground="White" BorderBrush="#3F3F3F"
-                    BorderThickness="1">
-            <TabItem Header="Radio Info" FontSize="16" FontWeight="SemiBold" Padding="2">
-                <Grid Margin="20">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-
-                    <TextBlock Text="Radio Information" FontSize="22" FontWeight="SemiBold"
-                               HorizontalAlignment="Left"
-                               Margin="0,0,0,20" Foreground="#0078D4" />
-
-                    <Border Grid.Row="1" BorderBrush="#3F3F3F" BorderThickness="1" CornerRadius="8" Padding="20"
-                            Background="#2D2D30" VerticalAlignment="Stretch">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-
-                            <!-- Band Buttons -->
-                            <Grid Grid.Row="0" Grid.ColumnSpan="4" Margin="5,5,5,30">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="40" />
-                                    <RowDefinition Height="40" />
-                                </Grid.RowDefinitions>
-                                <Button x:Name="Band160M" Content="160m" Grid.Column="0" Grid.Row="0" Margin="3" />
-                                <Button x:Name="Band80M" Content="80m" Grid.Column="1" Grid.Row="0" Margin="3" />
-                                <Button x:Name="Band40M" Content="40m" Grid.Column="2" Grid.Row="0" Margin="3" />
-                                <Button x:Name="Band30M" Content="30m" Grid.Column="3" Grid.Row="0" Margin="3" />
-                                <Button x:Name="Band20M" Content="20m" Grid.Column="4" Grid.Row="0" Margin="3" />
-                                <Button x:Name="Band17M" Content="17m" Grid.Column="0" Grid.Row="1" Margin="3" />
-                                <Button x:Name="Band15M" Content="15m" Grid.Column="1" Grid.Row="1" Margin="3" />
-                                <Button x:Name="Band12M" Content="12m" Grid.Column="2" Grid.Row="1" Margin="3" />
-                                <Button x:Name="Band10M" Content="10m" Grid.Column="3" Grid.Row="1" Margin="3" />
-                                <Button x:Name="Band6M" Content="6m" Grid.Column="4" Grid.Row="1" Margin="3" />
-                            </Grid>
-
-                            <!-- Band and Port -->
-                            <TextBlock Text="Band:" FontWeight="SemiBold" Grid.Row="1" Grid.Column="0"
-                                       Margin="0,0,10,10" Foreground="#0078D4" />
-                            <TextBlock x:Name="BandLabel" Text="10m band" Grid.Row="1" Grid.Column="1"
-                                       Margin="0,0,0,10" />
-                            <TextBlock Text="Port:" FontWeight="SemiBold" Grid.Row="1" Grid.Column="2"
-                                       Margin="20,0,10,10" Foreground="#0078D4" />
-                            <TextBlock x:Name="PortLabel" Text="{Binding Port}" Grid.Row="1" Grid.Column="3"
-                                       Margin="0,0,0,10" />
-
-                            <!-- RX and TX Frequency -->
-                            <TextBlock Text="RX Frequency:" FontWeight="SemiBold" Grid.Row="2" Grid.Column="0"
-                                       Margin="0,0,10,10" Foreground="#0078D4" />
-                            <TextBlock x:Name="RxFrequencyLabel" Text="{Binding Freq}" Grid.Row="2" Grid.Column="1"
-                                       Margin="0,0,0,10" d:DataContext="{d:DesignInstance local:RadioInfo}" />
-                            <TextBlock Text="TX Frequency:" FontWeight="SemiBold" Grid.Row="2" Grid.Column="2"
-                                       Margin="20,0,10,10" Foreground="#0078D4" />
-                            <TextBlock x:Name="TxFrequencyLabel" Text="{Binding TxFreq}" Grid.Row="2" Grid.Column="3"
-                                       Margin="0,0,0,10" d:DataContext="{d:DesignInstance local:RadioInfo}" />
-
-                            <!-- Mode and Active Radio -->
-                            <TextBlock Text="Mode:" FontWeight="SemiBold" Grid.Row="3" Grid.Column="0"
-                                       Margin="0,0,10,10" Foreground="#0078D4" />
-                            <TextBlock x:Name="ModeLabel" Text="USB" Grid.Row="3" Grid.Column="1" Margin="0,0,0,10" />
-                            <TextBlock Text="Active Radio:" FontWeight="SemiBold" Grid.Row="3" Grid.Column="2"
-                                       Margin="20,0,10,10" Foreground="#0078D4" />
-                            <TextBlock x:Name="ActiveRadioLabel" Text="1" Grid.Row="3" Grid.Column="3"
-                                       Margin="0,0,0,10" />
-
-                            <!-- Split and Transmitting -->
-                            <TextBlock Text="Split:" FontWeight="SemiBold" Grid.Row="4" Grid.Column="0"
-                                       Margin="0,0,10,10" Foreground="#0078D4" />
-                            <CheckBox x:Name="SplitStatusCheckBox" IsChecked="False" IsManipulationEnabled="False"
-                                      IsEnabled="False" Grid.Row="4" Grid.Column="1" Margin="0,0,0,10"
-                                      VerticalAlignment="Center" />
-                            <TextBlock Text="Transmitting:" FontWeight="SemiBold" Grid.Row="4" Grid.Column="2"
-                                       Margin="20,0,10,10" Foreground="#0078D4" />
-                            <TextBlock x:Name="TransmitStatusLabel" Text="{Binding IsTransmitting}" Grid.Row="4"
-                                       Grid.Column="3" Margin="0,0,0,10"
-                                       d:DataContext="{d:DesignInstance local:RadioInfo}" />
-
-                            <!-- Available Antennas and Selected Relay -->
-                            <TextBlock Text="Available Antennas:" FontWeight="SemiBold" Grid.Row="5" Grid.Column="0"
-                                       Margin="0,0,10,10" Foreground="#0078D4" />
-                            <ComboBox x:Name="AntennaSelectionComboBox" Grid.Row="5" Grid.Column="1" Margin="0,0,0,10"
-                                      SelectionChanged="AntennaSelectionComboBox_SelectionChanged"
-                                      Background="#2D2D30" Foreground="#E0E0E0" BorderBrush="#3F3F3F"
-                                      d:DataContext="{d:DesignInstance local:MainWindow }">
-                                <ComboBox.ItemContainerStyle>
-                                    <Style TargetType="ComboBoxItem">
-                                        <Setter Property="Background" Value="#2D2D30" />
-                                        <Setter Property="Foreground" Value="#E0E0E0" />
-                                        <Style.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter Property="Background" Value="#3E3E42" />
-                                            </Trigger>
-                                            <Trigger Property="IsSelected" Value="True">
-                                                <Setter Property="Background" Value="#0078D4" />
-                                            </Trigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </ComboBox.ItemContainerStyle>
-                            </ComboBox>
-                            <TextBlock Text="Selected Relay:" FontWeight="SemiBold" Grid.Row="5" Grid.Column="2"
-                                       Margin="20,0,10,10" Foreground="#0078D4" />
-                            <TextBlock x:Name="CurrentlySelectedRelayLabel" Text="{Binding CurrentlySelectedRelay}"
-                                       Grid.Row="5" Grid.Column="3" Margin="0,0,0,10"
-                                       d:DataContext="{d:DesignInstance local:RelayManager}" />
-                        </Grid>
-                    </Border>
-                </Grid>
-            </TabItem>
-            <TabItem Header="Settings" FontSize="16" FontWeight="SemiBold">
-                <Border BorderBrush="#3F3F3F" BorderThickness="1" CornerRadius="8" Margin="20" Padding="20"
-                        Background="#2D2D30" VerticalAlignment="Stretch">
-                    <Grid d:DataContext="{d:DesignInstance local:Settings }" Margin="10">
+            <TabControl Grid.Row="1" Background="#1E1E1E" Margin="10" Foreground="White" BorderBrush="#3F3F3F"
+                        BorderThickness="1" MaxHeight="800">
+                <TabItem Header="Radio Info" FontSize="16" FontWeight="SemiBold">
+                    <Grid Margin="20">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <Border BorderBrush="#3F3F3F" BorderThickness="1" CornerRadius="8" Padding="20"
+                                Background="#2D2D30">
+                            <Grid d:DataContext="{d:DesignInstance local:RadioInfo}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <!-- Band Buttons -->
+                                <Grid Grid.Row="0" Grid.ColumnSpan="4" Margin="5,5,5,30">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="40" />
+                                        <RowDefinition Height="40" />
+                                    </Grid.RowDefinitions>
+                                    <Button x:Name="Band160M" Content="160m" Grid.Column="0" Grid.Row="0" Margin="3" />
+                                    <Button x:Name="Band80M" Content="80m" Grid.Column="1" Grid.Row="0" Margin="3" />
+                                    <Button x:Name="Band40M" Content="40m" Grid.Column="2" Grid.Row="0" Margin="3" />
+                                    <Button x:Name="Band30M" Content="30m" Grid.Column="3" Grid.Row="0" Margin="3" />
+                                    <Button x:Name="Band20M" Content="20m" Grid.Column="4" Grid.Row="0" Margin="3" />
+                                    <Button x:Name="Band17M" Content="17m" Grid.Column="0" Grid.Row="1" Margin="3" />
+                                    <Button x:Name="Band15M" Content="15m" Grid.Column="1" Grid.Row="1" Margin="3" />
+                                    <Button x:Name="Band12M" Content="12m" Grid.Column="2" Grid.Row="1" Margin="3" />
+                                    <Button x:Name="Band10M" Content="10m" Grid.Column="3" Grid.Row="1" Margin="3" />
+                                    <Button x:Name="Band6M" Content="6m" Grid.Column="4" Grid.Row="1" Margin="3" />
+                                </Grid>
+
+                                <Expander Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="4" Header="Radio Information"
+                                          IsExpanded="{Binding IsExpanderExpanded, Mode=TwoWay}"
+                                          Margin="0,0,0,5"
+                                          Background="#2D2D30" Foreground="#E0E0E0" BorderBrush="#3F3F3F"
+                                          VerticalAlignment="Bottom"
+                                          Expanded="Expander_Expanded"
+                                          Collapsed="Expander_Collapsed">
+                                    <Grid Margin="10">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- Band and Port -->
+                                        <TextBlock Text="Band:" FontWeight="SemiBold" Grid.Row="0" Grid.Column="0"
+                                                   Margin="0,0,10,10" Foreground="#0078D4" />
+                                        <TextBlock x:Name="BandLabel" Text="10m band" Grid.Row="0" Grid.Column="1"
+                                                   Margin="0,0,0,10" />
+                                        <TextBlock Text="Port:" FontWeight="SemiBold" Grid.Row="0" Grid.Column="2"
+                                                   Margin="20,0,10,10" Foreground="#0078D4" />
+                                        <TextBlock x:Name="PortLabel" Text="{Binding Port}" Grid.Row="0"
+                                                   Grid.Column="3"
+                                                   Margin="0,0,0,10"
+                                                   d:DataContext="{d:DesignInstance local:AntennaConfig}" />
+
+                                        <!-- RX and TX Frequency -->
+                                        <TextBlock Text="RX Frequency:" FontWeight="SemiBold" Grid.Row="1"
+                                                   Grid.Column="0"
+                                                   Margin="0,0,10,10" Foreground="#0078D4" />
+                                        <TextBlock x:Name="RxFrequencyLabel" Text="{Binding Freq}" Grid.Row="1"
+                                                   Grid.Column="1"
+                                                   Margin="0,0,0,10" />
+                                        <TextBlock Text="TX Frequency:" FontWeight="SemiBold" Grid.Row="1"
+                                                   Grid.Column="2"
+                                                   Margin="20,0,10,10" Foreground="#0078D4" />
+                                        <TextBlock x:Name="TxFrequencyLabel" Text="{Binding TxFreq}" Grid.Row="1"
+                                                   Grid.Column="3"
+                                                   Margin="0,0,0,10" />
+
+                                        <!-- Mode and Active Radio -->
+                                        <TextBlock Text="Mode:" FontWeight="SemiBold" Grid.Row="2" Grid.Column="0"
+                                                   Margin="0,0,10,10" Foreground="#0078D4" />
+                                        <TextBlock x:Name="ModeLabel" Text="USB" Grid.Row="2" Grid.Column="1"
+                                                   Margin="0,0,0,10" />
+                                        <TextBlock Text="Active Radio:" FontWeight="SemiBold" Grid.Row="2"
+                                                   Grid.Column="2"
+                                                   Margin="20,0,10,10" Foreground="#0078D4" />
+                                        <TextBlock x:Name="ActiveRadioLabel" Text="1" Grid.Row="2" Grid.Column="3"
+                                                   Margin="0,0,0,10" />
+
+                                        <!-- Split and Transmitting -->
+                                        <TextBlock Text="Split:" FontWeight="SemiBold" Grid.Row="3" Grid.Column="0"
+                                                   Margin="0,0,10,10" Foreground="#0078D4" />
+                                        <CheckBox x:Name="SplitStatusCheckBox" IsChecked="False"
+                                                  IsManipulationEnabled="False"
+                                                  IsEnabled="False" Grid.Row="3" Grid.Column="1" Margin="0,0,0,10"
+                                                  VerticalAlignment="Center" />
+                                        <TextBlock Text="Transmitting:" FontWeight="SemiBold" Grid.Row="3"
+                                                   Grid.Column="2"
+                                                   Margin="20,0,10,10" Foreground="#0078D4" />
+                                        <TextBlock x:Name="TransmitStatusLabel" Text="{Binding IsTransmitting}"
+                                                   Grid.Row="3"
+                                                   Grid.Column="3" Margin="0,0,0,10" />
+
+                                        <!-- Available Antennas and Selected Relay -->
+                                        <TextBlock Text="Available Antennas:" FontWeight="SemiBold" Grid.Row="4"
+                                                   Grid.Column="0"
+                                                   Margin="0,0,10,10" Foreground="#0078D4" />
+                                        <ComboBox x:Name="AntennaSelectionComboBox" Grid.Row="4" Grid.Column="1"
+                                                  Margin="0,0,0,10"
+                                                  SelectionChanged="AntennaSelectionComboBox_SelectionChanged"
+                                                  Background="#2D2D30" Foreground="#E0E0E0" BorderBrush="#3F3F3F"
+                                                  d:DataContext="{d:DesignInstance local:MainWindow }">
+                                            <ComboBox.ItemContainerStyle>
+                                                <Style TargetType="ComboBoxItem">
+                                                    <Setter Property="Background" Value="#2D2D30" />
+                                                    <Setter Property="Foreground" Value="#E0E0E0" />
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="#3E3E42" />
+                                                        </Trigger>
+                                                        <Trigger Property="IsSelected" Value="True">
+                                                            <Setter Property="Background" Value="#0078D4" />
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </ComboBox.ItemContainerStyle>
+                                        </ComboBox>
+                                        <TextBlock Text="Selected Relay:" FontWeight="SemiBold" Grid.Row="4"
+                                                   Grid.Column="2"
+                                                   Margin="20,0,10,10" Foreground="#0078D4" />
+                                        <TextBlock x:Name="CurrentlySelectedRelayLabel"
+                                                   Text="{Binding CurrentlySelectedRelay}"
+                                                   Grid.Row="4" Grid.Column="3" Margin="0,0,0,10"
+                                                   d:DataContext="{d:DesignInstance local:RelayManager}" />
+                                    </Grid>
+                                </Expander>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </TabItem>
+                <TabItem Header="Settings" FontSize="16" FontWeight="SemiBold">
+                    <Grid Margin="20">
+                        <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
-                            <RowDefinition />
                         </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
 
-                        <TextBlock Text="Connection Settings" FontSize="22" FontWeight="SemiBold" Grid.ColumnSpan="4"
+                        <TextBlock Text="Connection Settings" FontSize="22" FontWeight="SemiBold"
                                    Margin="0,0,0,20" Foreground="#0078D4" />
 
-                        <Label Content="N1MM+ IP Address:" Grid.Row="1" Grid.Column="0" Margin="0,5,10,5" />
-                        <TextBox Text="{Binding BandDataIpAddress, UpdateSourceTrigger=PropertyChanged}" Grid.Row="1"
-                                 Grid.Column="1" Margin="0,5,10,5" />
+                        <Border Grid.Row="1" BorderBrush="#3F3F3F" BorderThickness="1" CornerRadius="8" Padding="20"
+                                Background="#2D2D30">
+                            <Grid d:DataContext="{d:DesignInstance local:Settings}">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
 
-                        <Label Content="N1MM+ Port:" Grid.Row="1" Grid.Column="2" Margin="0,5,10,5" />
-                        <TextBox Text="{Binding BandDataIpPort, UpdateSourceTrigger=PropertyChanged}" Grid.Row="1"
-                                 Grid.Column="3" Margin="0,5,0,5" />
+                                <Label Content="N1MM+ IP Address:" Grid.Row="1" Grid.Column="0" Margin="0,5,10,5" />
+                                <TextBox Text="{Binding BandDataIpAddress, UpdateSourceTrigger=PropertyChanged}"
+                                         Grid.Row="1"
+                                         Grid.Column="1" Margin="0,5,10,5" />
 
-                        <Label Content="Port Switch IP Address:" Grid.Row="2" Grid.Column="0" Margin="0,5,10,5" />
-                        <TextBox Text="{Binding AntennaSwitchIpAddress, UpdateSourceTrigger=PropertyChanged}"
-                                 Grid.Row="2" Grid.Column="1" Margin="0,5,10,5" />
+                                <Label Content="N1MM+ Port:" Grid.Row="1" Grid.Column="2" Margin="0,5,10,5" />
+                                <TextBox Text="{Binding BandDataIpPort, UpdateSourceTrigger=PropertyChanged}"
+                                         Grid.Row="1"
+                                         Grid.Column="3" Margin="0,5,0,5" />
 
-                        <Label Content="Port Switch Port:" Grid.Row="2" Grid.Column="2" Margin="0,5,10,5" />
-                        <TextBox Text="{Binding AntennaSwitchPort, UpdateSourceTrigger=PropertyChanged}"
-                                 Grid.Row="2" Grid.Column="3" Margin="0,5,0,5" />
+                                <Label Content="Port Switch IP Address:" Grid.Row="2" Grid.Column="0" Margin="0,5,10,5" />
+                                <TextBox Text="{Binding AntennaSwitchIpAddress, UpdateSourceTrigger=PropertyChanged}"
+                                         Grid.Row="2" Grid.Column="1" Margin="0,5,10,5" />
 
-                        <Label Content="MQTT Broker Address:" Grid.Row="3" Grid.Column="0" Margin="0,5,10,5" />
-                        <TextBox Text="{Binding MqttBrokerAddress, UpdateSourceTrigger=PropertyChanged}"
-                                 Grid.Row="3" Grid.Column="1" Margin="0,5,10,5" />
+                                <Label Content="Port Switch Port:" Grid.Row="2" Grid.Column="2" Margin="0,5,10,5" />
+                                <TextBox Text="{Binding AntennaSwitchPort, UpdateSourceTrigger=PropertyChanged}"
+                                         Grid.Row="2" Grid.Column="3" Margin="0,5,0,5" />
 
-                        <Label Content="MQTT Broker Port:" Grid.Row="3" Grid.Column="2" Margin="0,5,10,5" />
-                        <TextBox Text="{Binding MqttBrokerPort, UpdateSourceTrigger=PropertyChanged}"
-                                 Grid.Row="3" Grid.Column="3" Margin="0,5,0,5" />
+                                <Label Content="MQTT Broker Address:" Grid.Row="3" Grid.Column="0" Margin="0,5,10,5" />
+                                <TextBox Text="{Binding MqttBrokerAddress, UpdateSourceTrigger=PropertyChanged}"
+                                         Grid.Row="3" Grid.Column="1" Margin="0,5,10,5" />
 
-                        <Label Content="Number of ports:" Grid.Row="4" Grid.Column="0" Margin="0,5,10,5" />
-                        <TextBox Text="{Binding AntennaPortCount, UpdateSourceTrigger=PropertyChanged}" Grid.Row="4"
-                                 Grid.Column="1" Margin="0,5,10,5" ToolTip="The number of antenna ports on your switch" />
+                                <Label Content="MQTT Broker Port:" Grid.Row="3" Grid.Column="2" Margin="0,5,10,5" />
+                                <TextBox Text="{Binding MqttBrokerPort, UpdateSourceTrigger=PropertyChanged}"
+                                         Grid.Row="3" Grid.Column="3" Margin="0,5,0,5" />
 
-                        <Label Content="Multiple Inputs:" Grid.Row="4" Grid.Column="2" Margin="0,5,10,5" />
-                        <CheckBox IsChecked="{Binding HasMultipleInputs, UpdateSourceTrigger=PropertyChanged}"
-                                  Grid.Row="4" Grid.Column="3" Margin="0,5,0,5" VerticalAlignment="Center"
-                                  ToolTip="Check if your antenna switch has multiple inputs" />
+                                <Label Content="Number of ports:" Grid.Row="4" Grid.Column="0" Margin="0,5,10,5" />
+                                <TextBox Text="{Binding AntennaPortCount, UpdateSourceTrigger=PropertyChanged}"
+                                         Grid.Row="4"
+                                         Grid.Column="1" Margin="0,5,10,5"
+                                         ToolTip="The number of antenna ports on your switch" />
 
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                                    Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="4"
-                                    Margin="0,20,0,0">
-                            <Button Content="Save" Width="100" Margin="0,0,10,0" Click="SaveSettingsConfig_Click" />
-                            <Button Content="Cancel" Width="100" Margin="0" Click="CancelSettingsConfig_Click" />
-                        </StackPanel>
-                        <Label Content="MQTT Topic:" Grid.Row="7" Grid.Column="0" Margin="0,5,10,5" />
-                        <ComboBox x:Name="MqttTopicComboBox" Text="MQTT Topic" Grid.Row="7" Grid.Column="1"
-                                  Margin="0,0,0,0" SelectionChanged="MqttTopicComboBox_SelectionChanged"
-                                  Background="#2D2D30" Foreground="#E0E0E0" BorderBrush="#3F3F3F"
-                                  d:DataContext="{d:DesignInstance local:MainWindow }">
-                            <ComboBoxItem Content="Frequent"></ComboBoxItem>
-                            <ComboBoxItem Content="Sporadic"></ComboBoxItem>
-                            <ComboBox.ItemContainerStyle>
-                                <Style TargetType="ComboBoxItem">
-                                    <Setter Property="Background" Value="#2D2D30" />
-                                    <Setter Property="Foreground" Value="#E0E0E0" />
-                                    <Style.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Background" Value="#3E3E42" />
-                                        </Trigger>
-                                        <Trigger Property="IsSelected" Value="True">
-                                            <Setter Property="Background" Value="#0078D4" />
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </ComboBox.ItemContainerStyle>
-                        </ComboBox>
+                                <Label Content="Multiple Inputs:" Grid.Row="4" Grid.Column="2" Margin="0,5,10,5" />
+                                <CheckBox IsChecked="{Binding HasMultipleInputs, UpdateSourceTrigger=PropertyChanged}"
+                                          Grid.Row="4" Grid.Column="3" Margin="0,5,0,5" VerticalAlignment="Center"
+                                          ToolTip="Check if your antenna switch has multiple inputs" />
+
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                                            VerticalAlignment="Bottom"
+                                            Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="4"
+                                            Margin="0,20,0,0">
+                                    <Button Content="Save" Width="100" Margin="0,0,10,0"
+                                            Click="SaveSettingsConfig_Click" />
+                                    <Button Content="Cancel" Width="100" Margin="0" Click="CancelSettingsConfig_Click" />
+                                </StackPanel>
+                                <Label Content="MQTT Topic:" Grid.Row="7" Grid.Column="0" Margin="0,5,10,5" />
+                                <ComboBox x:Name="MqttTopicComboBox" Text="" Grid.Row="7" Grid.Column="1"
+                                          Margin="0,5,0,5" SelectionChanged="MqttTopicComboBox_SelectionChanged"
+                                          SelectedItem="Frequent"
+                                          Background="#2D2D30" Foreground="#E0E0E0" BorderBrush="#3F3F3F"
+                                          d:DataContext="{d:DesignInstance local:MainWindow }">
+                                    <ComboBoxItem Content="Frequent"></ComboBoxItem>
+                                    <ComboBoxItem Content="Sporadic"></ComboBoxItem>
+                                    <ComboBox.ItemContainerStyle>
+                                        <Style TargetType="ComboBoxItem">
+                                            <Setter Property="Background" Value="#2D2D30" />
+                                            <Setter Property="Foreground" Value="#E0E0E0" />
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="#3E3E42" />
+                                                </Trigger>
+                                                <Trigger Property="IsSelected" Value="True">
+                                                    <Setter Property="Background" Value="#0078D4" />
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ComboBox.ItemContainerStyle>
+                                </ComboBox>
+                            </Grid>
+                        </Border>
                     </Grid>
-                </Border>
-            </TabItem>
-            <TabItem Header="Port Selector" FontSize="16" FontWeight="SemiBold" Padding="2">
-                <Border BorderBrush="#3F3F3F" BorderThickness="1" CornerRadius="8" Margin="20" Padding="20"
-                        Background="#2D2D30" VerticalAlignment="Stretch">
-                    <Grid Margin="0,20,0,0">
+                </TabItem>
+                <TabItem Header="Port Selector" FontSize="16" FontWeight="SemiBold">
+                    <Grid Margin="20">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
@@ -456,7 +503,7 @@
                         <TextBlock Text="Port Selector" FontSize="24" FontWeight="SemiBold" Margin="0,0,0,20"
                                    Foreground="#0078D4" />
 
-                        <Border Grid.Row="1" BorderBrush="#3F3F3F" BorderThickness="1" CornerRadius="10" Padding="10"
+                        <Border Grid.Row="1" BorderBrush="#3F3F3F" BorderThickness="1" CornerRadius="8" Padding="10"
                                 Background="#2D2D30">
                             <DataGrid x:Name="PortGrid" AutoGenerateColumns="False" CanUserAddRows="False"
                                       CanUserDeleteRows="False" HeadersVisibility="Column"
@@ -580,8 +627,8 @@
                             <Button Content="Cancel" Width="100" Margin="0" Click="CancelAntennaConfig_Click" />
                         </StackPanel>
                     </Grid>
-                </Border>
-            </TabItem>
-        </TabControl>
-    </Grid>
+                </TabItem>
+            </TabControl>
+        </Grid>
+    </ScrollViewer>
 </Window>

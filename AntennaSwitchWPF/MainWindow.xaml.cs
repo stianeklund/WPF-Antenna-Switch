@@ -11,12 +11,12 @@ using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Extensions.ManagedClient;
 
-namespace AntennaSwitchWPF
-{
-    /// <summary>
-    ///     Interaction logic for MainWindow.xaml
-    /// </summary>
-    public partial class MainWindow : Window, IDisposable
+namespace AntennaSwitchWPF;
+
+/// <summary>
+///     Interaction logic for MainWindow.xaml
+/// </summary>
+public partial class MainWindow : Window, IDisposable
 {
     private ObservableCollection<AntennaConfig> _antennaConfigs;
     private BandDecoder _bandDecoder;
@@ -419,7 +419,8 @@ namespace AntennaSwitchWPF
             {
                 var lastSelectedRelay = _relayManager?.GetLastSelectedRelayForBand(bandNumber);
 
-                _selectedPort = lastSelectedRelay != 0 && AvailableAntennas.Contains(lastSelectedRelay.GetValueOrDefault())
+                _selectedPort = lastSelectedRelay != 0 &&
+                                AvailableAntennas.Contains(lastSelectedRelay.GetValueOrDefault())
                     ? lastSelectedRelay
                     : AvailableAntennas.First();
 
@@ -632,8 +633,9 @@ namespace AntennaSwitchWPF
 
         var options = new JsonSerializerOptions { WriteIndented = true };
         var jsonString = JsonSerializer.Serialize(config, options);
-        
-        Directory.CreateDirectory(Path.GetDirectoryName(_configPath) ?? throw new InvalidOperationException(nameof(_configPath)));
+
+        Directory.CreateDirectory(Path.GetDirectoryName(_configPath) ??
+                                  throw new InvalidOperationException(nameof(_configPath)));
         File.WriteAllText(_configPath, jsonString);
     }
 
@@ -652,7 +654,7 @@ namespace AntennaSwitchWPF
         if (config?.AntennaConfigs != null)
         {
             _antennaConfigs.Clear();
- 
+
             foreach (var antennaConfig in config.AntennaConfigs)
             {
                 var newConfig = new AntennaConfig
@@ -688,7 +690,6 @@ namespace AntennaSwitchWPF
             _settings.MqttUsername = config.Settings.MqttUsername;
             _settings.MqttPassword = config.Settings.MqttPassword;
             _settings.MqttTopic = config.Settings.MqttTopic ?? "Sporadic";
-
         }
 
         UpdateAvailableAntennas();
@@ -706,7 +707,8 @@ namespace AntennaSwitchWPF
         if (MqttTopicComboBox.SelectedItem is ComboBoxItem selectedItem)
         {
             await ChangeUpdateFrequency(selectedItem.Content.ToString());
-            MessageBox.Show($"MQTTT topic changed to {selectedItem.Content}", "Topic Changed", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show($"MQTTT topic changed to {selectedItem.Content}", "Topic Changed", MessageBoxButton.OK,
+                MessageBoxImage.Information);
         }
     }
 
