@@ -49,6 +49,9 @@ public partial class MainWindow : IDisposable
             for (var i = 1; i <= 8; i++) _antennaConfigs.Add(new AntennaConfig { Port = $"{i}" });
             LoadConfigFromFile();
 
+            MqttTopicComboBox.SelectedItem = MqttTopicComboBox.Items.Cast<ComboBoxItem>()
+                .FirstOrDefault(item => item.Content.ToString() == _settings.MqttTopic);
+
 
             _udpListener = new UdpListener();
 
@@ -73,7 +76,7 @@ public partial class MainWindow : IDisposable
             InitializeMqttClient();
             
             // Add this line to subscribe to MQTT messages
-            _mqttClient.ApplicationMessageReceivedAsync += HandleMqttMessageReceived;
+            if (_mqttClient != null) _mqttClient.ApplicationMessageReceivedAsync += HandleMqttMessageReceived;
         }
         catch (Exception ex)
         {
@@ -107,10 +110,7 @@ public partial class MainWindow : IDisposable
 
             await _mqttClient.StartAsync(managedMqttClientOptions);
 
-            await _mqttClient.SubscribeAsync([new MqttTopicFilterBuilder()
-                .WithTopic("omnirig/sporadic/radio_info")
-                .WithQualityOfServiceLevel(MQTTnet.Protocol.MqttQualityOfServiceLevel.AtMostOnce)
-                .Build()]);
+            await SubscribeToMqttTopic();
 
             _mqttClient.ApplicationMessageReceivedAsync += HandleMqttMessageReceived;
         }
@@ -118,6 +118,19 @@ public partial class MainWindow : IDisposable
         {
             Console.WriteLine($"Error initializing MQTT client: {ex.Message}");
         }
+    }
+
+    private async Task SubscribeToMqttTopic()
+    {
+        string topic = _settings.MqttTopic.Equals("frequent"
+, StringComparison.CurrentCultureIgnoreCase)
+            ? "omnirig/frequent/radio_info" 
+            : "omnirig/sporadic/radio_info";
+
+        await _mqttClient.SubscribeAsync([new MqttTopicFilterBuilder()
+            .WithTopic(topic)
+            .WithQualityOfServiceLevel(MQTTnet.Protocol.MqttQualityOfServiceLevel.AtMostOnce)
+            .Build()]);
     }
 
     private Task HandleMqttMessageReceived(MqttApplicationMessageReceivedEventArgs arg)
@@ -334,7 +347,7 @@ public partial class MainWindow : IDisposable
         var currentlySelected = AntennaSelectionComboBox.SelectedItem;
         AntennaSelectionComboBox.ItemsSource = AvailableAntennas;
 
-        if (AvailableAntennas != null && AvailableAntennas.Count > 0)
+        if (AvailableAntennas.Count > 0)
         {
             AntennaSelectionComboBox.SelectedItem =
                 currentlySelected is int selectedInt && AvailableAntennas.Contains(selectedInt) ? currentlySelected :
@@ -375,51 +388,44 @@ public partial class MainWindow : IDisposable
             var bandName = GetBandName(bandNumber);
             if (BandLabel != null) BandLabel.Text = bandName;
 
-            if (_relayManager != null)
+            AvailableAntennas = await _relayManager.GetRelaysForBandAsync(bandNumber, _antennaConfigs.ToList());
+
+            if (AvailableAntennas.Count != 0)
             {
-                AvailableAntennas = await _relayManager.GetRelaysForBandAsync(bandNumber, _antennaConfigs.ToList());
+                var lastSelectedRelay = _relayManager.GetLastSelectedRelayForBand(bandNumber);
 
-                if (AvailableAntennas != null && AvailableAntennas.Count != 0)
+                _selectedPort = lastSelectedRelay != 0 && AvailableAntennas.Contains(lastSelectedRelay)
+                    ? lastSelectedRelay
+                    : AvailableAntennas.First();
+
+                await _relayManager.SetRelayForAntennaAsync(_selectedPort, bandNumber);
+
+                if (PortLabel != null) PortLabel.Text = _selectedPort.ToString();
+                UpdateCurrentlySelectedRelayLabel();
+                UpdateAntennaSelectionUi();
+
+                // Ensure the ComboBox is updated
+                if (AntennaSelectionComboBox != null)
                 {
-                    var lastSelectedRelay = _relayManager.GetLastSelectedRelayForBand(bandNumber);
-
-                    _selectedPort = lastSelectedRelay != 0 && AvailableAntennas.Contains(lastSelectedRelay)
-                        ? lastSelectedRelay
-                        : AvailableAntennas.First();
-
-                    await _relayManager.SetRelayForAntennaAsync(_selectedPort, bandNumber);
-
-                    if (PortLabel != null) PortLabel.Text = _selectedPort.ToString();
-                    UpdateCurrentlySelectedRelayLabel();
-                    UpdateAntennaSelectionUi();
-
-                    // Ensure the ComboBox is updated
-                    if (AntennaSelectionComboBox != null)
-                    {
-                        AntennaSelectionComboBox.ItemsSource = AvailableAntennas;
-                        AntennaSelectionComboBox.SelectedItem = _selectedPort;
-                        _previousSelectedRelay = _selectedPort;
-                    }
+                    AntennaSelectionComboBox.ItemsSource = AvailableAntennas;
+                    AntennaSelectionComboBox.SelectedItem = _selectedPort;
+                    _previousSelectedRelay = _selectedPort;
                 }
-                else
-                {
-                    _selectedPort = 0;
-                    if (PortLabel != null) PortLabel.Text = "N/A";
-                    if (AntennaSelectionComboBox != null)
-                    {
-                        AntennaSelectionComboBox.ItemsSource = null;
-                        AntennaSelectionComboBox.SelectedItem = null;
-                    }
-
-                    if (CurrentlySelectedRelayLabel != null) CurrentlySelectedRelayLabel.Text = "N/A";
-                }
-
-                UpdateBandButtons(bandNumber);
             }
             else
             {
-                Console.WriteLine("Error: _relayManager is null");
+                _selectedPort = 0;
+                if (PortLabel != null) PortLabel.Text = "N/A";
+                if (AntennaSelectionComboBox != null)
+                {
+                    AntennaSelectionComboBox.ItemsSource = null;
+                    AntennaSelectionComboBox.SelectedItem = null;
+                }
+
+                if (CurrentlySelectedRelayLabel != null) CurrentlySelectedRelayLabel.Text = "N/A";
             }
+
+            UpdateBandButtons(bandNumber);
         }
         catch (Exception ex)
         {
@@ -549,6 +555,17 @@ public partial class MainWindow : IDisposable
             MessageBoxImage.Information);
     }
 
+    private async Task ChangeUpdateFrequency(string? topic)
+    {
+        if (_settings.MqttTopic != null && !_settings.MqttTopic.Contains(topic!))
+        {
+            _settings.MqttTopic = topic?.ToLower();
+            await _mqttClient.UnsubscribeAsync("omnirig/+/radio_info");
+            await SubscribeToMqttTopic();
+            SaveConfigToFile(); // Save the new setting to the config file
+        }
+    }
+
     private void SaveConfigToFile()
     {
         var config = new ConfigWrapper
@@ -581,6 +598,7 @@ public partial class MainWindow : IDisposable
                 MqttBrokerPort = _settings.MqttBrokerPort,
                 MqttUsername = _settings.MqttUsername,
                 MqttPassword = _settings.MqttPassword,
+                MqttTopic = _settings.MqttTopic,
             }
         };
 
@@ -640,6 +658,7 @@ public partial class MainWindow : IDisposable
             _settings.MqttBrokerPort = config.Settings.MqttBrokerPort;
             _settings.MqttUsername = config.Settings.MqttUsername;
             _settings.MqttPassword = config.Settings.MqttPassword;
+            _settings.MqttTopic = config.Settings.MqttTopic ?? "Sporadic";
 
         }
 
@@ -651,6 +670,15 @@ public partial class MainWindow : IDisposable
         LoadConfigFromFile();
         MessageBox.Show("Changes canceled and previous configuration restored.", "Canceled", MessageBoxButton.OK,
             MessageBoxImage.Information);
+    }
+
+    private async void MqttTopicComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (MqttTopicComboBox.SelectedItem is ComboBoxItem selectedItem)
+        {
+            await ChangeUpdateFrequency(selectedItem.Content.ToString());
+            MessageBox.Show($"MQTTT topic changed to {selectedItem.Content}", "Topic Changed", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
     }
 
     private class ConfigWrapper

@@ -284,9 +284,9 @@
 
                             <!-- RX and TX Frequency -->
                             <TextBlock Text="RX Frequency:" FontWeight="SemiBold" Grid.Row="2" Grid.Column="0" Margin="0,0,10,10" Foreground="#0078D4" />
-                            <TextBlock x:Name="RxFrequencyLabel" Text="{Binding RxFrequency}" Grid.Row="2" Grid.Column="1" Margin="0,0,0,10" d:DataContext="{d:DesignInstance local:RadioInfo}" />
+                            <TextBlock x:Name="RxFrequencyLabel" Text="{Binding Freq}" Grid.Row="2" Grid.Column="1" Margin="0,0,0,10" d:DataContext="{d:DesignInstance local:RadioInfo}" />
                             <TextBlock Text="TX Frequency:" FontWeight="SemiBold" Grid.Row="2" Grid.Column="2" Margin="20,0,10,10" Foreground="#0078D4" />
-                            <TextBlock x:Name="TxFrequencyLabel" Text="{Binding TxFrequency}" Grid.Row="2" Grid.Column="3" Margin="0,0,0,10" d:DataContext="{d:DesignInstance local:RadioInfo}" />
+                            <TextBlock x:Name="TxFrequencyLabel" Text="{Binding TxFreq}" Grid.Row="2" Grid.Column="3" Margin="0,0,0,10" d:DataContext="{d:DesignInstance local:RadioInfo}" />
 
                             <!-- Mode and Active Radio -->
                             <TextBlock Text="Mode:" FontWeight="SemiBold" Grid.Row="3" Grid.Column="0" Margin="0,0,10,10" Foreground="#0078D4" />
@@ -350,6 +350,7 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
                         <TextBlock Text="Connection Settings" FontSize="22" FontWeight="SemiBold" Grid.ColumnSpan="4"
@@ -394,41 +395,64 @@
                             <Button Content="Save" Width="100" Margin="0,0,10,0" Click="SaveSettingsConfig_Click" />
                             <Button Content="Cancel" Width="100" Margin="0" Click="CancelSettingsConfig_Click" />
                         </StackPanel>
+                        <Label Content="MQTT Topic:" Grid.Row="7" Grid.Column="0" Margin="0,5,10,5" />
+                        <ComboBox x:Name="MqttTopicComboBox" Text="MQTT Topic" Grid.Row="7" Grid.Column="1"
+                                  Margin="0,0,0,0" SelectionChanged="MqttTopicComboBox_SelectionChanged"
+                                  Background="#2D2D30" Foreground="#E0E0E0" BorderBrush="#3F3F3F"
+                                  d:DataContext="{d:DesignInstance local:MainWindow }">
+                            <ComboBoxItem Content="Frequent"></ComboBoxItem>
+                            <ComboBoxItem Content="Sporadic"></ComboBoxItem>
+                            <ComboBox.ItemContainerStyle>
+                                <Style TargetType="ComboBoxItem">
+                                    <Setter Property="Background" Value="#2D2D30" />
+                                    <Setter Property="Foreground" Value="#E0E0E0" />
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#3E3E42" />
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="Background" Value="#0078D4" />
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ComboBox.ItemContainerStyle>
+                        </ComboBox>
                     </Grid>
                 </Border>
             </TabItem>
-            <TabItem Header="Port Selector" FontSize="16" FontWeight="SemiBold">
-                <Grid Margin="20">
+            <TabItem Header="Port Selector">
+                <Grid Margin="0,20,0,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <TextBlock Text="Port Selector" FontWeight="SemiBold" Margin="0,0,0,15"
+                    <TextBlock Text="Port Selector" FontSize="24" FontWeight="SemiBold" Margin="0,0,0,20"
                                Foreground="#0078D4" />
 
-                    <Border Grid.Row="1" BorderBrush="#3F3F3F" BorderThickness="1" CornerRadius="8" Padding="10"
-                            Background="#2D2D30" VerticalAlignment="Stretch">
+                    <Border Grid.Row="1" BorderBrush="#3F3F3F" BorderThickness="1" CornerRadius="10" Padding="10"
+                            Background="#2D2D30">
                         <DataGrid x:Name="PortGrid" AutoGenerateColumns="False" CanUserAddRows="False"
-                                  CanUserDeleteRows="False" HeadersVisibility="Column">
+                                  CanUserDeleteRows="False" HeadersVisibility="Column"
+                                  Background="#1E1E1E" Foreground="#E0E0E0" BorderBrush="#3F3F3F">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Port" Binding="{Binding Port}" IsReadOnly="True"
                                                     Width="Auto" SortMemberPath="Port">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="#E0E0E0" />
                                             <Setter Property="VerticalAlignment" Value="Center" />
                                             <Setter Property="Padding" Value="5,0" />
+                                            <Setter Property="Foreground" Value="#E0E0E0" />
                                         </Style>
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
                                 <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="#E0E0E0" />
                                             <Setter Property="VerticalAlignment" Value="Center" />
                                             <Setter Property="Padding" Value="5,0" />
+                                            <Setter Property="Foreground" Value="#E0E0E0" />
                                         </Style>
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
@@ -516,9 +540,9 @@
                         </DataGrid>
                     </Border>
 
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="2" Margin="0,15,0,0">
-                        <Button Content="Save" Width="100" Margin="5,0" Click="SaveAntennaConfig_Click" />
-                        <Button Content="Cancel" Width="100" Margin="5,0" Click="CancelAntennaConfig_Click" />
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="2" Margin="0,20,0,0">
+                        <Button Content="Save" Width="100" Margin="0,0,10,0" Click="SaveAntennaConfig_Click" />
+                        <Button Content="Cancel" Width="100" Margin="0" Click="CancelAntennaConfig_Click" />
                     </StackPanel>
                 </Grid>
             </TabItem>
