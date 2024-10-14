@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AntennaSwitchWPF"
         mc:Ignorable="d"
-        Title="AntennaName Switch" Height="600" Width="800"
+        Title="Antenna jSwitch" Height="600" Width="800"
         Background="#1E1E1E" d:DataContext="{d:DesignInstance local:AntennaConfig}"
         WindowStartupLocation="CenterScreen">
     <Window.Effect>
@@ -15,7 +15,7 @@
         <Style TargetType="TextBlock">
             <Setter Property="Foreground" Value="#E0E0E0" />
             <Setter Property="FontFamily" Value="Segoe UI" />
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="14" />
         </Style>
         <Style TargetType="CheckBox">
             <Setter Property="Foreground" Value="#E0E0E0" />
@@ -24,7 +24,7 @@
             <Setter Property="Foreground" Value="#E0E0E0" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="FontFamily" Value="Segoe UI" />
-            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontSize" Value="16" />
         </Style>
         <Style TargetType="TextBox">
             <Setter Property="Background" Value="#2D2D30" />
@@ -32,7 +32,7 @@
             <Setter Property="BorderBrush" Value="#3F3F3F" />
             <Setter Property="FontFamily" Value="Segoe UI" />
             <Setter Property="Padding" Value="5,3" />
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="14" />
         </Style>
         <Style TargetType="Button">
             <Setter Property="Background" Value="#0078D4" />
@@ -100,16 +100,16 @@
                                 <ColumnDefinition />
                                 <ColumnDefinition />
                             </Grid.ColumnDefinitions>
-                            <ToggleButton Name="ToggleButton" 
-                                          Template="{DynamicResource ComboBoxToggleButton}" 
-                                          Grid.Column="0" 
+                            <ToggleButton Name="ToggleButton"
+                                          Template="{DynamicResource ComboBoxToggleButton}"
+                                          Grid.Column="0"
                                           Focusable="false"
                                           IsChecked="{Binding Path=IsDropDownOpen,Mode=TwoWay,RelativeSource={RelativeSource TemplatedParent}}"
                                           ClickMode="Press">
                             </ToggleButton>
 
-                            <ContentPresenter Grid.Column="0" Name="ContentSite" 
-                                              IsHitTestVisible="False"  
+                            <ContentPresenter Grid.Column="0" Name="ContentSite"
+                                              IsHitTestVisible="False"
                                               Content="{TemplateBinding SelectionBoxItem}"
                                               ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
                                               ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
@@ -117,32 +117,33 @@
                                               VerticalAlignment="Center"
                                               HorizontalAlignment="Left" />
                             <TextBox Grid.Column="0" x:Name="PART_EditableTextBox"
-                                     Style="{x:Null}" 
-                                     Template="{DynamicResource ComboBoxTextBox}" 
-                                     HorizontalAlignment="Left" 
-                                     VerticalAlignment="Center" 
+                                     Style="{x:Null}"
+                                     Template="{DynamicResource ComboBoxTextBox}"
+                                     HorizontalAlignment="Left"
+                                     VerticalAlignment="Center"
                                      Margin="3,3,23,3"
-                                     Focusable="True" 
+                                     Focusable="True"
                                      Background="#2D2D30"
                                      Foreground="#E0E0E0"
                                      Visibility="Hidden"
-                                     IsReadOnly="{TemplateBinding IsReadOnly}"/>
+                                     IsReadOnly="{TemplateBinding IsReadOnly}" />
                             <Popup Grid.Column="0" Name="Popup"
                                    Placement="Bottom"
                                    IsOpen="{TemplateBinding IsDropDownOpen}"
-                                   AllowsTransparency="True" 
+                                   AllowsTransparency="True"
                                    Focusable="False"
                                    PopupAnimation="Slide">
                                 <Grid Name="DropDown"
-                                      SnapsToDevicePixels="True"                
+                                      SnapsToDevicePixels="True"
                                       MinWidth="{TemplateBinding ActualWidth}"
                                       MaxHeight="{TemplateBinding MaxDropDownHeight}">
                                     <Border x:Name="DropDownBorder"
                                             Background="#2D2D30"
                                             BorderThickness="1"
-                                            BorderBrush="#3F3F3F"/>
+                                            BorderBrush="#3F3F3F" />
                                     <ScrollViewer Margin="4,6,4,6" SnapsToDevicePixels="True">
-                                        <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained" />
+                                        <StackPanel IsItemsHost="True"
+                                                    KeyboardNavigation.DirectionalNavigation="Contained" />
                                     </ScrollViewer>
                                 </Grid>
                             </Popup>
@@ -156,10 +157,10 @@
             <Setter Property="Foreground" Value="#E0E0E0" />
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#3E3E42"/>
+                    <Setter Property="Background" Value="#3E3E42" />
                 </Trigger>
                 <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Background" Value="#0078D4"/>
+                    <Setter Property="Background" Value="#0078D4" />
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -168,7 +169,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="TabItem">
                         <Border Name="Border" BorderThickness="1,1,1,0" BorderBrush="#3F3F3F" CornerRadius="4,4,0,0"
-                                Margin="2,0">
+                                Margin="2,2">
                             <ContentPresenter x:Name="ContentSite"
                                               VerticalAlignment="Center"
                                               HorizontalAlignment="Center"
@@ -195,9 +196,11 @@
                     <ColumnDefinition />
                     <ColumnDefinition Width="20" />
                 </Grid.ColumnDefinitions>
-                <Border x:Name="Border" Grid.ColumnSpan="2" Background="#2D2D30" BorderBrush="#3F3F3F" BorderThickness="1" />
+                <Border x:Name="Border" Grid.ColumnSpan="2" Background="#2D2D30" BorderBrush="#3F3F3F"
+                        BorderThickness="1" />
                 <Border Grid.Column="0" Margin="1" Background="#2D2D30" BorderBrush="#3F3F3F" BorderThickness="0,0,1,0" />
-                <Path x:Name="Arrow" Grid.Column="1" Fill="#E0E0E0" HorizontalAlignment="Center" VerticalAlignment="Center" Data="M0,0 L0,2 L4,6 L8,2 L8,0 L4,4 z"/>
+                <Path x:Name="Arrow" Grid.Column="1" Fill="#E0E0E0" HorizontalAlignment="Center"
+                      VerticalAlignment="Center" Data="M0,0 L0,2 L4,6 L8,2 L8,0 L4,4 z" />
             </Grid>
         </ControlTemplate>
 
@@ -216,13 +219,14 @@
         <Border Background="#0078D4" Grid.Row="0">
             <TextBlock Text="Antenna Switch" FontSize="24" FontWeight="Bold" Foreground="White" Margin="20,10">
                 <TextBlock.Effect>
-                    <DropShadowEffect ShadowDepth="1" Direction="330" Color="Black" Opacity="0.5" BlurRadius="2"/>
+                    <DropShadowEffect ShadowDepth="1" Direction="330" Color="Black" Opacity="0.5" BlurRadius="2" />
                 </TextBlock.Effect>
             </TextBlock>
         </Border>
 
-        <TabControl Grid.Row="1" Background="#1E1E1E" Margin="2" Foreground="White" BorderBrush="#3F3F3F" BorderThickness="1">
-            <TabItem Header="Radio Info" FontSize="16" FontWeight="SemiBold">
+        <TabControl Grid.Row="1" Background="#1E1E1E" Margin="2" Foreground="White" BorderBrush="#3F3F3F"
+                    BorderThickness="1">
+            <TabItem Header="Radio Info" FontSize="16" FontWeight="SemiBold" Padding="2">
                 <Grid Margin="20">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -254,15 +258,15 @@
                             <!-- Band Buttons -->
                             <Grid Grid.Row="0" Grid.ColumnSpan="4" Margin="5,5,5,30">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="40"/>
-                                    <RowDefinition Height="40"/>
+                                    <RowDefinition Height="40" />
+                                    <RowDefinition Height="40" />
                                 </Grid.RowDefinitions>
                                 <Button x:Name="Band160M" Content="160m" Grid.Column="0" Grid.Row="0" Margin="3" />
                                 <Button x:Name="Band80M" Content="80m" Grid.Column="1" Grid.Row="0" Margin="3" />
@@ -277,33 +281,51 @@
                             </Grid>
 
                             <!-- Band and Port -->
-                            <TextBlock Text="Band:" FontWeight="SemiBold" Grid.Row="1" Grid.Column="0" Margin="0,0,10,10" Foreground="#0078D4"/>
-                            <TextBlock x:Name="BandLabel" Text="10m band" Grid.Row="1" Grid.Column="1" Margin="0,0,0,10" />
-                            <TextBlock Text="Port:" FontWeight="SemiBold" Grid.Row="1" Grid.Column="2" Margin="20,0,10,10" Foreground="#0078D4"/>
-                            <TextBlock x:Name="PortLabel" Text="{Binding Port}" Grid.Row="1" Grid.Column="3" Margin="0,0,0,10" />
+                            <TextBlock Text="Band:" FontWeight="SemiBold" Grid.Row="1" Grid.Column="0"
+                                       Margin="0,0,10,10" Foreground="#0078D4" />
+                            <TextBlock x:Name="BandLabel" Text="10m band" Grid.Row="1" Grid.Column="1"
+                                       Margin="0,0,0,10" />
+                            <TextBlock Text="Port:" FontWeight="SemiBold" Grid.Row="1" Grid.Column="2"
+                                       Margin="20,0,10,10" Foreground="#0078D4" />
+                            <TextBlock x:Name="PortLabel" Text="{Binding Port}" Grid.Row="1" Grid.Column="3"
+                                       Margin="0,0,0,10" />
 
                             <!-- RX and TX Frequency -->
-                            <TextBlock Text="RX Frequency:" FontWeight="SemiBold" Grid.Row="2" Grid.Column="0" Margin="0,0,10,10" Foreground="#0078D4" />
-                            <TextBlock x:Name="RxFrequencyLabel" Text="{Binding Freq}" Grid.Row="2" Grid.Column="1" Margin="0,0,0,10" d:DataContext="{d:DesignInstance local:RadioInfo}" />
-                            <TextBlock Text="TX Frequency:" FontWeight="SemiBold" Grid.Row="2" Grid.Column="2" Margin="20,0,10,10" Foreground="#0078D4" />
-                            <TextBlock x:Name="TxFrequencyLabel" Text="{Binding TxFreq}" Grid.Row="2" Grid.Column="3" Margin="0,0,0,10" d:DataContext="{d:DesignInstance local:RadioInfo}" />
+                            <TextBlock Text="RX Frequency:" FontWeight="SemiBold" Grid.Row="2" Grid.Column="0"
+                                       Margin="0,0,10,10" Foreground="#0078D4" />
+                            <TextBlock x:Name="RxFrequencyLabel" Text="{Binding Freq}" Grid.Row="2" Grid.Column="1"
+                                       Margin="0,0,0,10" d:DataContext="{d:DesignInstance local:RadioInfo}" />
+                            <TextBlock Text="TX Frequency:" FontWeight="SemiBold" Grid.Row="2" Grid.Column="2"
+                                       Margin="20,0,10,10" Foreground="#0078D4" />
+                            <TextBlock x:Name="TxFrequencyLabel" Text="{Binding TxFreq}" Grid.Row="2" Grid.Column="3"
+                                       Margin="0,0,0,10" d:DataContext="{d:DesignInstance local:RadioInfo}" />
 
                             <!-- Mode and Active Radio -->
-                            <TextBlock Text="Mode:" FontWeight="SemiBold" Grid.Row="3" Grid.Column="0" Margin="0,0,10,10" Foreground="#0078D4" />
+                            <TextBlock Text="Mode:" FontWeight="SemiBold" Grid.Row="3" Grid.Column="0"
+                                       Margin="0,0,10,10" Foreground="#0078D4" />
                             <TextBlock x:Name="ModeLabel" Text="USB" Grid.Row="3" Grid.Column="1" Margin="0,0,0,10" />
-                            <TextBlock Text="Active Radio:" FontWeight="SemiBold" Grid.Row="3" Grid.Column="2" Margin="20,0,10,10" Foreground="#0078D4" />
-                            <TextBlock x:Name="ActiveRadioLabel" Text="1" Grid.Row="3" Grid.Column="3" Margin="0,0,0,10" />
+                            <TextBlock Text="Active Radio:" FontWeight="SemiBold" Grid.Row="3" Grid.Column="2"
+                                       Margin="20,0,10,10" Foreground="#0078D4" />
+                            <TextBlock x:Name="ActiveRadioLabel" Text="1" Grid.Row="3" Grid.Column="3"
+                                       Margin="0,0,0,10" />
 
                             <!-- Split and Transmitting -->
-                            <TextBlock Text="Split:" FontWeight="SemiBold" Grid.Row="4" Grid.Column="0" Margin="0,0,10,10" Foreground="#0078D4" />
-                            <CheckBox x:Name="SplitStatusCheckBox" IsChecked="False" IsManipulationEnabled="False" IsEnabled="False" Grid.Row="4" Grid.Column="1" Margin="0,0,0,10" VerticalAlignment="Center" />
-                            <TextBlock Text="Transmitting:" FontWeight="SemiBold" Grid.Row="4" Grid.Column="2" Margin="20,0,10,10" Foreground="#0078D4" />
-                            <TextBlock x:Name="TransmitStatusLabel" Text="{Binding IsTransmitting}" Grid.Row="4" Grid.Column="3" Margin="0,0,0,10"
+                            <TextBlock Text="Split:" FontWeight="SemiBold" Grid.Row="4" Grid.Column="0"
+                                       Margin="0,0,10,10" Foreground="#0078D4" />
+                            <CheckBox x:Name="SplitStatusCheckBox" IsChecked="False" IsManipulationEnabled="False"
+                                      IsEnabled="False" Grid.Row="4" Grid.Column="1" Margin="0,0,0,10"
+                                      VerticalAlignment="Center" />
+                            <TextBlock Text="Transmitting:" FontWeight="SemiBold" Grid.Row="4" Grid.Column="2"
+                                       Margin="20,0,10,10" Foreground="#0078D4" />
+                            <TextBlock x:Name="TransmitStatusLabel" Text="{Binding IsTransmitting}" Grid.Row="4"
+                                       Grid.Column="3" Margin="0,0,0,10"
                                        d:DataContext="{d:DesignInstance local:RadioInfo}" />
 
                             <!-- Available Antennas and Selected Relay -->
-                            <TextBlock Text="Available Antennas:" FontWeight="SemiBold" Grid.Row="5" Grid.Column="0" Margin="0,0,10,10" Foreground="#0078D4" />
-                            <ComboBox x:Name="AntennaSelectionComboBox" Grid.Row="5" Grid.Column="1" Margin="0,0,0,10" SelectionChanged="AntennaSelectionComboBox_SelectionChanged"
+                            <TextBlock Text="Available Antennas:" FontWeight="SemiBold" Grid.Row="5" Grid.Column="0"
+                                       Margin="0,0,10,10" Foreground="#0078D4" />
+                            <ComboBox x:Name="AntennaSelectionComboBox" Grid.Row="5" Grid.Column="1" Margin="0,0,0,10"
+                                      SelectionChanged="AntennaSelectionComboBox_SelectionChanged"
                                       Background="#2D2D30" Foreground="#E0E0E0" BorderBrush="#3F3F3F"
                                       d:DataContext="{d:DesignInstance local:MainWindow }">
                                 <ComboBox.ItemContainerStyle>
@@ -312,16 +334,17 @@
                                         <Setter Property="Foreground" Value="#E0E0E0" />
                                         <Style.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter Property="Background" Value="#3E3E42"/>
+                                                <Setter Property="Background" Value="#3E3E42" />
                                             </Trigger>
                                             <Trigger Property="IsSelected" Value="True">
-                                                <Setter Property="Background" Value="#0078D4"/>
+                                                <Setter Property="Background" Value="#0078D4" />
                                             </Trigger>
                                         </Style.Triggers>
                                     </Style>
                                 </ComboBox.ItemContainerStyle>
                             </ComboBox>
-                            <TextBlock Text="Selected Relay:" FontWeight="SemiBold" Grid.Row="5" Grid.Column="2" Margin="20,0,10,10" Foreground="#0078D4" />
+                            <TextBlock Text="Selected Relay:" FontWeight="SemiBold" Grid.Row="5" Grid.Column="2"
+                                       Margin="20,0,10,10" Foreground="#0078D4" />
                             <TextBlock x:Name="CurrentlySelectedRelayLabel" Text="{Binding CurrentlySelectedRelay}"
                                        Grid.Row="5" Grid.Column="3" Margin="0,0,0,10"
                                        d:DataContext="{d:DesignInstance local:RelayManager}" />
@@ -343,7 +366,7 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
-                            <RowDefinition Height="Auto" />
+                            <RowDefinition />
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
@@ -382,12 +405,12 @@
 
                         <Label Content="Number of ports:" Grid.Row="4" Grid.Column="0" Margin="0,5,10,5" />
                         <TextBox Text="{Binding AntennaPortCount, UpdateSourceTrigger=PropertyChanged}" Grid.Row="4"
-                                 Grid.Column="1" Margin="0,5,10,5" ToolTip="The number of antenna ports on your switch"/>
+                                 Grid.Column="1" Margin="0,5,10,5" ToolTip="The number of antenna ports on your switch" />
 
                         <Label Content="Multiple Inputs:" Grid.Row="4" Grid.Column="2" Margin="0,5,10,5" />
-                        <CheckBox IsChecked="{Binding HasMultipleInputs, UpdateSourceTrigger=PropertyChanged}" 
+                        <CheckBox IsChecked="{Binding HasMultipleInputs, UpdateSourceTrigger=PropertyChanged}"
                                   Grid.Row="4" Grid.Column="3" Margin="0,5,0,5" VerticalAlignment="Center"
-                                  ToolTip="Check if your antenna switch has multiple inputs"/>
+                                  ToolTip="Check if your antenna switch has multiple inputs" />
 
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom"
                                     Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="4"
@@ -420,131 +443,144 @@
                     </Grid>
                 </Border>
             </TabItem>
-            <TabItem Header="Port Selector">
-                <Grid Margin="0,20,0,0">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
+            <TabItem Header="Port Selector" FontSize="16" FontWeight="SemiBold" Padding="2">
+                <Border BorderBrush="#3F3F3F" BorderThickness="1" CornerRadius="8" Margin="20" Padding="20"
+                        Background="#2D2D30" VerticalAlignment="Stretch">
+                    <Grid Margin="0,20,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
 
-                    <TextBlock Text="Port Selector" FontSize="24" FontWeight="SemiBold" Margin="0,0,0,20"
-                               Foreground="#0078D4" />
+                        <TextBlock Text="Port Selector" FontSize="24" FontWeight="SemiBold" Margin="0,0,0,20"
+                                   Foreground="#0078D4" />
 
-                    <Border Grid.Row="1" BorderBrush="#3F3F3F" BorderThickness="1" CornerRadius="10" Padding="10"
-                            Background="#2D2D30">
-                        <DataGrid x:Name="PortGrid" AutoGenerateColumns="False" CanUserAddRows="False"
-                                  CanUserDeleteRows="False" HeadersVisibility="Column"
-                                  Background="#1E1E1E" Foreground="#E0E0E0" BorderBrush="#3F3F3F">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="Port" Binding="{Binding Port}" IsReadOnly="True"
-                                                    Width="Auto" SortMemberPath="Port">
-                                    <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="VerticalAlignment" Value="Center" />
-                                            <Setter Property="Padding" Value="5,0" />
-                                            <Setter Property="Foreground" Value="#E0E0E0" />
-                                        </Style>
-                                    </DataGridTextColumn.ElementStyle>
-                                </DataGridTextColumn>
-                                <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*">
-                                    <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="VerticalAlignment" Value="Center" />
-                                            <Setter Property="Padding" Value="5,0" />
-                                            <Setter Property="Foreground" Value="#E0E0E0" />
-                                        </Style>
-                                    </DataGridTextColumn.ElementStyle>
-                                </DataGridTextColumn>
-                                <DataGridTemplateColumn Header="160m" Width="Auto">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <CheckBox IsChecked="{Binding Is160M, UpdateSourceTrigger=PropertyChanged}"
-                                                      VerticalAlignment="Center" HorizontalAlignment="Center" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="80m" Width="Auto">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <CheckBox IsChecked="{Binding Is80M, UpdateSourceTrigger=PropertyChanged}"
-                                                      VerticalAlignment="Center" HorizontalAlignment="Center" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="40m" Width="Auto">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <CheckBox IsChecked="{Binding Is40M, UpdateSourceTrigger=PropertyChanged}"
-                                                      VerticalAlignment="Center" HorizontalAlignment="Center" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="30m" Width="Auto">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <CheckBox IsChecked="{Binding Is30M, UpdateSourceTrigger=PropertyChanged}"
-                                                      VerticalAlignment="Center" HorizontalAlignment="Center" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="20m" Width="Auto">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <CheckBox IsChecked="{Binding Is20M, UpdateSourceTrigger=PropertyChanged}"
-                                                      VerticalAlignment="Center" HorizontalAlignment="Center" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="17m" Width="Auto">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <CheckBox IsChecked="{Binding Is17M, UpdateSourceTrigger=PropertyChanged}"
-                                                      VerticalAlignment="Center" HorizontalAlignment="Center" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="15m" Width="Auto">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <CheckBox IsChecked="{Binding Is15M, UpdateSourceTrigger=PropertyChanged}"
-                                                      VerticalAlignment="Center" HorizontalAlignment="Center" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="12m" Width="Auto">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <CheckBox IsChecked="{Binding Is12M, UpdateSourceTrigger=PropertyChanged}"
-                                                      VerticalAlignment="Center" HorizontalAlignment="Center" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="10m" Width="Auto">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <CheckBox IsChecked="{Binding Is10M, UpdateSourceTrigger=PropertyChanged}"
-                                                      VerticalAlignment="Center" HorizontalAlignment="Center" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="6m" Width="Auto">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <CheckBox IsChecked="{Binding Is6M, UpdateSourceTrigger=PropertyChanged}"
-                                                      VerticalAlignment="Center" HorizontalAlignment="Center" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </Border>
+                        <Border Grid.Row="1" BorderBrush="#3F3F3F" BorderThickness="1" CornerRadius="10" Padding="10"
+                                Background="#2D2D30">
+                            <DataGrid x:Name="PortGrid" AutoGenerateColumns="False" CanUserAddRows="False"
+                                      CanUserDeleteRows="False" HeadersVisibility="Column"
+                                      Background="#1E1E1E" Foreground="#E0E0E0" BorderBrush="#3F3F3F">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Port" Binding="{Binding Port}" IsReadOnly="True"
+                                                        Width="Auto" SortMemberPath="Port">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="VerticalAlignment" Value="Center" />
+                                                <Setter Property="Padding" Value="5,0" />
+                                                <Setter Property="Foreground" Value="#E0E0E0" />
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+                                    <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="VerticalAlignment" Value="Center" />
+                                                <Setter Property="Padding" Value="5,0" />
+                                                <Setter Property="Foreground" Value="#E0E0E0" />
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+                                    <DataGridTemplateColumn Header="160m" Width="Auto">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <CheckBox
+                                                    IsChecked="{Binding Is160M, UpdateSourceTrigger=PropertyChanged}"
+                                                    VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="80m" Width="Auto">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <CheckBox
+                                                    IsChecked="{Binding Is80M, UpdateSourceTrigger=PropertyChanged}"
+                                                    VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="40m" Width="Auto">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <CheckBox
+                                                    IsChecked="{Binding Is40M, UpdateSourceTrigger=PropertyChanged}"
+                                                    VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="30m" Width="Auto">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <CheckBox
+                                                    IsChecked="{Binding Is30M, UpdateSourceTrigger=PropertyChanged}"
+                                                    VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="20m" Width="Auto">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <CheckBox
+                                                    IsChecked="{Binding Is20M, UpdateSourceTrigger=PropertyChanged}"
+                                                    VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="17m" Width="Auto">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <CheckBox
+                                                    IsChecked="{Binding Is17M, UpdateSourceTrigger=PropertyChanged}"
+                                                    VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="15m" Width="Auto">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <CheckBox
+                                                    IsChecked="{Binding Is15M, UpdateSourceTrigger=PropertyChanged}"
+                                                    VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="12m" Width="Auto">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <CheckBox
+                                                    IsChecked="{Binding Is12M, UpdateSourceTrigger=PropertyChanged}"
+                                                    VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="10m" Width="Auto">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <CheckBox
+                                                    IsChecked="{Binding Is10M, UpdateSourceTrigger=PropertyChanged}"
+                                                    VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="6m" Width="Auto">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <CheckBox
+                                                    IsChecked="{Binding Is6M, UpdateSourceTrigger=PropertyChanged}"
+                                                    VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Border>
 
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="2" Margin="0,20,0,0">
-                        <Button Content="Save" Width="100" Margin="0,0,10,0" Click="SaveAntennaConfig_Click" />
-                        <Button Content="Cancel" Width="100" Margin="0" Click="CancelAntennaConfig_Click" />
-                    </StackPanel>
-                </Grid>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="2" Margin="0,20,0,0">
+                            <Button Content="Save" Width="100" Margin="0,0,10,0" Click="SaveAntennaConfig_Click" />
+                            <Button Content="Cancel" Width="100" Margin="0" Click="CancelAntennaConfig_Click" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
             </TabItem>
         </TabControl>
     </Grid>
