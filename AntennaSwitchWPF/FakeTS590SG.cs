@@ -27,17 +27,47 @@ public class FakeTs590Sg : IDisposable
         Console.WriteLine($"FakeTS590SG received new radio info: RX={e.Freq}, TX={e.TxFreq}, Mode={e.Mode}, Split={e.IsSplit}, Transmitting={e.IsTransmitting}");
     }
 
-    public async Task StartAsync(int port)
+    public async Task<int> StartAsync(int port)
     {
-        await Task.Run(() =>
+        return await Task.Run(() =>
         {
             _cts = new CancellationTokenSource();
-            _tcpListener = new TcpListener(IPAddress.Any, port);
+            int actualPort = FindAvailablePort(port);
+            _tcpListener = new TcpListener(IPAddress.Any, actualPort);
             _tcpListener.Start();
             _listeningTask = ListenForConnectionsAsync(_cts.Token);
 
-            Console.WriteLine($"FakeTS590SG started on port {port}");
+            Console.WriteLine($"FakeTS590SG started on port {actualPort}");
+            return actualPort;
         });
+    }
+
+    private int FindAvailablePort(int startPort)
+    {
+        int port = startPort;
+        bool isAvailable = false;
+
+        while (!isAvailable && port < 65535)
+        {
+            try
+            {
+                var listener = new TcpListener(IPAddress.Any, port);
+                listener.Start();
+                listener.Stop();
+                isAvailable = true;
+            }
+            catch (SocketException)
+            {
+                port++;
+            }
+        }
+
+        if (!isAvailable)
+        {
+            throw new Exception("No available ports found.");
+        }
+
+        return port;
     }
 
     private async Task ListenForConnectionsAsync(CancellationToken cancellationToken)

@@ -12,6 +12,7 @@ public class FakeTs590SgTests
     {
         var udpListener = new UdpListener();
         return new FakeTs590Sg(udpListener);
+        
     }
 
     [Theory]

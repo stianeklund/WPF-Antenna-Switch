@@ -1,81 +1,87 @@
-﻿using System.Collections;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.IO;
+using System.Text;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using AntennaSwitchWPF.RelayController;
 using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Extensions.ManagedClient;
+using MQTTnet.Protocol;
 
 namespace AntennaSwitchWPF;
 
-/// <summary>
-///     Interaction logic for MainWindow.xaml
-/// </summary>
-public partial class MainWindow : Window, IDisposable
+public partial class MainWindow : IDisposable
 {
-    private ObservableCollection<AntennaConfig> _antennaConfigs;
-    private BandDecoder _bandDecoder;
-    private FakeTs590Sg _fakeTs590Sg;
+    private readonly ObservableCollection<AntennaConfig> _antennaConfigs;
+    private readonly BandDecoder _bandDecoder;
+    private readonly FakeTs590Sg _fakeTs590Sg;
     private RelayManager? _relayManager;
-    private Settings _settings;
-    private UdpListener _udpListener;
+    private readonly Settings _settings;
+    private readonly UdpListener _udpListener;
     private UdpMessageSender _udpMessageSender;
     private readonly SemaphoreSlim _updateSemaphore = new(1, 1);
     private int? _selectedPort;
-    private IManagedMqttClient _mqttClient;
+    private IManagedMqttClient? _mqttClient;
     private RadioInfo _radioInfo;
+    private readonly JsonSerializerOptions _options = new() { PropertyNameCaseInsensitive = true };
 
-    private static readonly string SystemPath = Environment.GetFolderPath(
-        Environment.SpecialFolder.CommonApplicationData
-    );
+    private static readonly string SystemPath =
+        Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
 
     private readonly string _configPath = Path.Combine(SystemPath, "AntennaSwitchManager", "config.json");
 
     public List<int> AvailableAntennas { get; private set; } = [];
+    public List<string> MqttTopic { get; } = ["Frequent", "Sporadic"];
+
+    public string FormattedDateTime => DateTime.Now.ToString("HH:mm:ss:fff");
 
     public MainWindow()
     {
-        try
-        {
-            InitializeComponent();
-            InitializeComponents();
-            SetupEventHandlers();
-            LoadConfigFromFile();
-            InitializeMqttClient();
-        }
-        catch (Exception ex)
-        {
-            HandleInitializationError(ex);
-        }
-    }
-
-    private void InitializeComponents()
-    {
+        InitializeComponent();
         _settings = new Settings();
         _bandDecoder = new BandDecoder();
         _antennaConfigs = [];
         _udpListener = new UdpListener();
         _fakeTs590Sg = new FakeTs590Sg(_udpListener);
-        _udpMessageSender = CreateUdpMessageSender();
-        _relayManager = new RelayManager(_udpMessageSender);
         _radioInfo = new RadioInfo();
 
-        for (var i = 1; i <= 8; i++) _antennaConfigs.Add(new AntennaConfig { Port = $"{i}" });
+        InitializeComponents();
+        SetupEventHandlers();
+        LoadConfigFromFile();
+        InitializeMqttClientAsync().ConfigureAwait(false);
+    }
+
+    private void InitializeComponents()
+    {
+        _udpMessageSender = CreateUdpMessageSender();
+        _relayManager = new RelayManager(_udpMessageSender);
+
+        var portCount = _settings.AntennaPortCount > 0 ? _settings.AntennaPortCount : 6;
+        for (var i = 1; i <= portCount; i++) _antennaConfigs.Add(new AntennaConfig { Port = $"{i}" });
 
         PortGrid.ItemsSource = _antennaConfigs;
         DataContext = _settings;
+        _fakeTs590Sg.StartAsync(4532).ConfigureAwait(false);
+
+        MqttTopicComboBox.ItemsSource = MqttTopic;
+        MqttTopicComboBox.SelectedItem = MqttTopic.FirstOrDefault();
     }
 
     private void SetupEventHandlers()
     {
         Loaded += MainWindow_Loaded;
         Closing += MainWindow_Closing;
+        SizeChanged += OnSizeChanged;
         _udpListener.RadioInfoReceived += OnRadioInfoReceived;
+    }
+
+    private void OnSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        SizeToContent = SizeToContent.WidthAndHeight;
     }
 
     private UdpMessageSender CreateUdpMessageSender()
@@ -85,76 +91,74 @@ public partial class MainWindow : Window, IDisposable
             : new UdpMessageSender("10.0.0.12", 12090);
     }
 
-    private void HandleInitializationError(Exception ex)
+    private async Task InitializeMqttClientAsync()
     {
-        MessageBox.Show(
-            $"Error initializing the application: {ex.Message}\nThe application may not function correctly.",
-            "Initialization Error", MessageBoxButton.OK, MessageBoxImage.Error);
-        Console.WriteLine($"Error initializing the application: {ex}");
-    }
-
-    private async Task InitializeMqttClient()
-    {
-        var mqttFactory = new MqttFactory();
-        _mqttClient = mqttFactory.CreateManagedMqttClient();
-
         try
         {
+            var mqttFactory = new MqttFactory();
+            _mqttClient = mqttFactory.CreateManagedMqttClient();
+
             var mqttClientOptions = CreateMqttClientOptions();
+            if (mqttClientOptions == null) return;
+
             var managedMqttClientOptions = new ManagedMqttClientOptionsBuilder()
                 .WithClientOptions(mqttClientOptions)
                 .Build();
 
             await _mqttClient.StartAsync(managedMqttClientOptions);
-            await SubscribeToMqttTopic();
-            _mqttClient.ApplicationMessageReceivedAsync += HandleMqttMessageReceived;
+            await SubscribeToMqttTopicAsync();
+            _mqttClient.SubscriptionsChangedAsync += MqttClientOnSubscriptionsChangedAsync;
+            _mqttClient.ApplicationMessageReceivedAsync += HandleMqttMessageReceivedAsync;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error initializing MQTT client: {ex.Message}");
+            Console.WriteLine($"Error initializing MQTT client: {ex.Message} {ex.StackTrace}");
         }
     }
 
-    private MqttClientOptions CreateMqttClientOptions()
+    private Task MqttClientOnSubscriptionsChangedAsync(SubscriptionsChangedEventArgs arg)
     {
+        Console.WriteLine(
+            $"{FormattedDateTime} MQTT subscription changed, topic: {arg.SubscribeResult.FirstOrDefault()?.Items.FirstOrDefault()?.TopicFilter.Topic}");
+        return Task.CompletedTask;
+    }
+
+    private MqttClientOptions? CreateMqttClientOptions()
+    {
+        if (string.IsNullOrEmpty(_settings.MqttBrokerAddress) || _settings.MqttBrokerPort is 0 or null) return null;
+
         var mqttClientOptionsBuilder = new MqttClientOptionsBuilder()
             .WithTcpServer(_settings.MqttBrokerAddress, _settings.MqttBrokerPort);
 
         if (!string.IsNullOrEmpty(_settings.MqttUsername) && !string.IsNullOrEmpty(_settings.MqttPassword))
-        {
             mqttClientOptionsBuilder.WithCredentials(_settings.MqttUsername, _settings.MqttPassword);
-        }
 
         return mqttClientOptionsBuilder.Build();
     }
 
-    private async Task SubscribeToMqttTopic()
+    private async Task SubscribeToMqttTopicAsync()
     {
-        string topic = GetMqttTopic();
+        var topic = GetMqttTopic().ToLower();
 
         var topicFilter = new MqttTopicFilterBuilder()
             .WithTopic(topic)
-            .WithQualityOfServiceLevel(MQTTnet.Protocol.MqttQualityOfServiceLevel.AtMostOnce)
+            .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
             .Build();
 
-        await _mqttClient.SubscribeAsync([topicFilter]);
+        await _mqttClient!.SubscribeAsync([topicFilter]);
     }
 
     private string GetMqttTopic()
     {
-        return _settings.MqttTopic != null &&
-               _settings.MqttTopic.Equals("frequent", StringComparison.CurrentCultureIgnoreCase)
-            ? "omnirig/frequent/radio_info"
-            : "omnirig/sporadic/radio_info";
+        return _settings.CurrentMqttTopic != null
+            ? $"omnirig/{_settings.CurrentMqttTopic.ToLower()}/radio_info"
+            : $"omnirig/{MqttTopic.FirstOrDefault()?.ToLower()}/radio_info";
     }
 
-    private Task HandleMqttMessageReceived(MqttApplicationMessageReceivedEventArgs arg)
+    private Task HandleMqttMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs arg)
     {
-        var message = System.Text.Encoding.UTF8.GetString(arg.ApplicationMessage.PayloadSegment);
-        if (string.IsNullOrEmpty(message))
-        {
-            return Task.CompletedTask;
-        }
+        var message = Encoding.UTF8.GetString(arg.ApplicationMessage.PayloadSegment);
+        if (string.IsNullOrEmpty(message)) return Task.CompletedTask;
 
         if (arg.ApplicationMessage.Topic.EndsWith("/radio_info"))
         {
@@ -170,7 +174,7 @@ public partial class MainWindow : Window, IDisposable
 
     private void HandleRadioInfoMessage(string message)
     {
-        RadioInfo? newRadioInfo = JsonSerializer.Deserialize<RadioInfo>(message);
+        var newRadioInfo = JsonSerializer.Deserialize<RadioInfo>(message);
         if (newRadioInfo != null)
         {
             UpdateRadioInfo(newRadioInfo);
@@ -193,73 +197,13 @@ public partial class MainWindow : Window, IDisposable
         UpdateActiveRadio(info.ActiveRadioNr);
         UpdateTransmitStatus(info.IsTransmitting);
         _bandDecoder.DecodeBand(info.Freq.ToString());
-        UpdateAntennaSelection(_bandDecoder.BandNumber);
-    }
-
-    private void AntennaConfigs_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-    {
-        HandleAntennaConfigsCollectionChanged(e);
-        UpdateAvailableAntennas();
-    }
-
-    private void HandleAntennaConfigsCollectionChanged(NotifyCollectionChangedEventArgs e)
-    {
-        switch (e.Action)
-        {
-            case NotifyCollectionChangedAction.Add:
-                AddPropertyChangedHandlers(e.NewItems);
-                break;
-            case NotifyCollectionChangedAction.Remove:
-                RemovePropertyChangedHandlers(e.OldItems);
-                break;
-            case NotifyCollectionChangedAction.Replace:
-                RemovePropertyChangedHandlers(e.OldItems);
-                AddPropertyChangedHandlers(e.NewItems);
-                break;
-            case NotifyCollectionChangedAction.Reset:
-                ResetPropertyChangedHandlers();
-                break;
-            case NotifyCollectionChangedAction.Move:
-            default:
-                throw new ArgumentOutOfRangeException(nameof(e));
-        }
-    }
-
-    private void AddPropertyChangedHandlers(IList? items)
-    {
-        if (items == null) return;
-        foreach (AntennaConfig item in items)
-        {
-            item.PropertyChanged += AntennaConfig_PropertyChanged;
-        }
-    }
-
-    private void RemovePropertyChangedHandlers(IList? items)
-    {
-        if (items == null) return;
-        foreach (AntennaConfig item in items)
-        {
-            item.PropertyChanged -= AntennaConfig_PropertyChanged;
-        }
-    }
-
-    private void ResetPropertyChangedHandlers()
-    {
-        foreach (var item in _antennaConfigs)
-        {
-            item.PropertyChanged += AntennaConfig_PropertyChanged;
-        }
-    }
-
-    private void AntennaConfig_PropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        UpdateAvailableAntennas();
+        UpdateAntennaSelectionAsync(_bandDecoder.BandNumber).ConfigureAwait(false);
     }
 
     private async void UpdateAvailableAntennas()
     {
         await UpdateAvailableAntennasAsync();
-        await UpdateAntennaSelection(_bandDecoder.BandNumber);
+        await UpdateAntennaSelectionAsync(_bandDecoder.BandNumber);
     }
 
     public void Dispose()
@@ -267,13 +211,19 @@ public partial class MainWindow : Window, IDisposable
         _udpListener.RadioInfoReceived -= OnRadioInfoReceived;
         _udpListener.Dispose();
         _udpMessageSender.Dispose();
-        _fakeTs590Sg?.Dispose();
+        _fakeTs590Sg.Dispose();
         _relayManager?.Dispose();
         _updateSemaphore.Dispose();
         _mqttClient?.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+    {
+        await StartUdpListenerAsync();
+    }
+
+    private async void MainWindow_OnSizeChanged(object sender, RoutedEventArgs e)
     {
         await StartUdpListenerAsync();
     }
@@ -300,24 +250,24 @@ public partial class MainWindow : Window, IDisposable
 
     private async void OnRadioInfoReceived(object? sender, RadioInfo radioInfo)
     {
+        Console.WriteLine($"{FormattedDateTime} OnRadioInfoReceived called");
         await Dispatcher.InvokeAsync(async () =>
         {
             try
             {
                 _bandDecoder.DecodeBand(radioInfo.Freq.ToString());
-                await UpdateAntennaSelection(_bandDecoder.BandNumber);
 
-                UpdateRxFrequency(radioInfo.Freq.ToString());
-                UpdateTxFrequency(radioInfo.TxFreq.ToString());
-                UpdateMode(radioInfo.Mode);
-                UpdateSplitStatus(radioInfo.IsSplit);
-                UpdateActiveRadio(radioInfo.ActiveRadioNr);
-                UpdateTransmitStatus(radioInfo.IsTransmitting);
+                if (_relayManager != null && !_relayManager.IsCorrectRelaySet(_bandDecoder.BandNumber))
+                    await UpdateAntennaSelectionAsync(_bandDecoder.BandNumber);
+
+                UpdateUiWithRadioInfo(radioInfo);
                 _fakeTs590Sg._lastReceivedInfo = radioInfo;
+
+                Console.WriteLine($"{FormattedDateTime} OnRadioInfoReceived completed");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in OnRadioInfoReceived: {ex}");
+                Console.WriteLine($"{FormattedDateTime} Error in OnRadioInfoReceived: {ex}");
             }
         });
     }
@@ -350,6 +300,7 @@ public partial class MainWindow : Window, IDisposable
         try
         {
             if (_relayManager != null) await _relayManager.SetRelayForAntennaAsync(relayId, _bandDecoder.BandNumber);
+
             UpdateCurrentlySelectedRelayLabel();
         }
         catch (Exception ex)
@@ -374,7 +325,7 @@ public partial class MainWindow : Window, IDisposable
             AntennaSelectionComboBox.SelectedItem =
                 currentlySelected is int selectedInt && AvailableAntennas.Contains(selectedInt) ? currentlySelected :
                 AvailableAntennas.Contains((int)_selectedPort!) ? _selectedPort :
-                AvailableAntennas.First();
+                AvailableAntennas.FirstOrDefault();
 
             AntennaSelectionComboBox.IsEnabled = AvailableAntennas.Count > 1;
             AntennaSelectionComboBox.Visibility = AvailableAntennas.Count > 1 ? Visibility.Visible : Visibility.Hidden;
@@ -389,77 +340,76 @@ public partial class MainWindow : Window, IDisposable
 
     private void UpdateCurrentlySelectedRelayLabel()
     {
-        CurrentlySelectedRelayLabel.Text = _relayManager?.CurrentlySelectedRelay.ToString();
+        CurrentlySelectedRelayLabel.Text = _relayManager?.CurrentlySelectedRelay.ToString() ?? "N/A";
     }
-
-    private int? _previousSelectedRelay;
 
     private async void AntennaSelectionComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (AntennaSelectionComboBox.SelectedItem is int selectedRelay && selectedRelay != _previousSelectedRelay)
-        {
+        if (AntennaSelectionComboBox.SelectedItem is int selectedRelay &&
+            selectedRelay != _relayManager?.GetLastSelectedRelayForBand(_bandDecoder.BandNumber))
             await SetAntennaAsync(selectedRelay);
-            _previousSelectedRelay = selectedRelay;
-        }
     }
 
-    private async Task UpdateAntennaSelection(int bandNumber)
+    private async Task UpdateAntennaSelectionAsync(int bandNumber)
     {
         try
         {
-            var bandName = GetBandName(bandNumber);
-            if (BandLabel != null) BandLabel.Text = bandName;
+            if (BandLabel != null) BandLabel.Text = GetBandName(bandNumber);
 
-            if (_relayManager != null)
+            if (_relayManager == null)
             {
-                AvailableAntennas = await _relayManager.GetRelaysForBandAsync(bandNumber, _antennaConfigs.ToList());
+                ResetAntennaSelection();
+                UpdateBandButtons(bandNumber);
+                return;
             }
 
-            if (AvailableAntennas.Count != 0)
+            AvailableAntennas = await _relayManager.GetRelaysForBandAsync(bandNumber, _antennaConfigs.ToList());
+            var lastSelectedRelay = _relayManager.GetLastSelectedRelayForBand(bandNumber);
+
+            
+
+            _selectedPort = AvailableAntennas.Contains(lastSelectedRelay) ? lastSelectedRelay : AvailableAntennas.FirstOrDefault();
+
+            if (_selectedPort != 0)
             {
-                var lastSelectedRelay = _relayManager?.GetLastSelectedRelayForBand(bandNumber);
+                if (PortLabel != null) PortLabel.Text = _selectedPort.ToString();
+                UpdateCurrentlySelectedRelayLabel();
+                UpdateAntennaSelectionUi();
 
-                _selectedPort = lastSelectedRelay != 0 &&
-                                AvailableAntennas.Contains(lastSelectedRelay.GetValueOrDefault())
-                    ? lastSelectedRelay
-                    : AvailableAntennas.First();
-
-                if (_selectedPort != null)
+                // Only update if it's the first run or if the relay has changed
+                if (_relayManager.CurrentlySelectedRelay == 0 || lastSelectedRelay != _relayManager.CurrentlySelectedRelay)
                 {
-                    await _relayManager?.SetRelayForAntennaAsync((int)_selectedPort, bandNumber)!;
-
-                    if (PortLabel != null) PortLabel.Text = _selectedPort.ToString();
-                    UpdateCurrentlySelectedRelayLabel();
-                    UpdateAntennaSelectionUi();
-
-                    // Ensure the ComboBox is updated
-                    if (AntennaSelectionComboBox != null)
-                    {
-                        AntennaSelectionComboBox.ItemsSource = AvailableAntennas;
-                        AntennaSelectionComboBox.SelectedItem = _selectedPort;
-                        _previousSelectedRelay = _selectedPort;
-                    }
+                    Console.WriteLine($"{FormattedDateTime} Calling SetAntennaAsync for port {_selectedPort}");
+                    if (_selectedPort != null) await SetAntennaAsync(_selectedPort.Value);
+                    Console.WriteLine($"{FormattedDateTime} Available antennas: {string.Join(", ", AvailableAntennas)}");
+                    Console.WriteLine($"{FormattedDateTime} Last selected relay: {lastSelectedRelay}");
                 }
             }
             else
             {
-                _selectedPort = 0;
-                if (PortLabel != null) PortLabel.Text = "N/A";
-                if (AntennaSelectionComboBox != null)
-                {
-                    AntennaSelectionComboBox.ItemsSource = null;
-                    AntennaSelectionComboBox.SelectedItem = null;
-                }
-
-                if (CurrentlySelectedRelayLabel != null) CurrentlySelectedRelayLabel.Text = "N/A";
+                ResetAntennaSelection();
             }
 
             UpdateBandButtons(bandNumber);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error in UpdateAntennaSelection: {ex.Message}");
+            Console.WriteLine($"{FormattedDateTime} Error in UpdateAntennaSelection: {ex.Message}");
         }
+    }
+
+    private void ResetAntennaSelection()
+    {
+        Console.WriteLine($"{FormattedDateTime} No available antennas for band {_bandDecoder.BandNumber}");
+        _selectedPort = 0;
+        if (PortLabel != null) PortLabel.Text = "N/A";
+        if (AntennaSelectionComboBox != null)
+        {
+            AntennaSelectionComboBox.ItemsSource = null;
+            AntennaSelectionComboBox.SelectedItem = null;
+        }
+
+        UpdateCurrentlySelectedRelayLabel();
     }
 
     private void UpdateBandButtons(int selectedBandNumber)
@@ -522,45 +472,21 @@ public partial class MainWindow : Window, IDisposable
         };
     }
 
-    private void UpdateRxFrequency(string frequency)
-    {
-        RxFrequencyLabel.Text = frequency;
-    }
+    private void UpdateRxFrequency(string frequency) => RxFrequencyLabel.Text = frequency;
 
-    private void UpdateTxFrequency(string frequency)
-    {
-        TxFrequencyLabel.Text = frequency;
-    }
+    private void UpdateTxFrequency(string frequency) => TxFrequencyLabel.Text = frequency;
 
-    private void UpdateMode(string mode)
-    {
-        ModeLabel.Text = mode;
-    }
+    private void UpdateMode(string mode) => ModeLabel.Text = mode;
 
-    private void UpdateSplitStatus(bool isSplit)
-    {
-        SplitStatusCheckBox.IsChecked = isSplit;
-    }
+    private void UpdateSplitStatus(bool isSplit) => SplitStatusCheckBox.IsChecked = isSplit;
 
-    private void UpdateActiveRadio(int? activeRadio)
-    {
-        ActiveRadioLabel.Text = activeRadio?.ToString();
-    }
+    private void UpdateActiveRadio(int? activeRadio) => ActiveRadioLabel.Text = activeRadio?.ToString() ?? "N/A";
 
-    private void UpdateTransmitStatus(bool isTransmitting)
-    {
-        TransmitStatusLabel.Text = isTransmitting ? "Yes" : "No";
-    }
+    private void UpdateTransmitStatus(bool isTransmitting) => TransmitStatusLabel.Text = isTransmitting ? "Yes" : "No";
 
-    private void SaveAntennaConfig_Click(object sender, RoutedEventArgs e)
-    {
-        SaveConfig();
-    }
+    private void SaveAntennaConfig_Click(object sender, RoutedEventArgs e) => SaveConfig();
 
-    private void SaveSettingsConfig_Click(object sender, RoutedEventArgs e)
-    {
-        SaveConfig();
-    }
+    private void SaveSettingsConfig_Click(object sender, RoutedEventArgs e) => SaveConfig();
 
     private void SaveConfig()
     {
@@ -586,35 +512,41 @@ public partial class MainWindow : Window, IDisposable
 
     private async Task ChangeUpdateFrequency(string? topic)
     {
-        if (_settings.MqttTopic != null && !_settings.MqttTopic.Contains(topic!))
+        if (string.IsNullOrEmpty(topic)) return;
+
+        MqttTopicComboBox.SelectedItem = topic;
+        _settings.CurrentMqttTopic = topic;
+
+        if (_mqttClient is { IsConnected: true, IsStarted: true })
         {
-            _settings.MqttTopic = topic?.ToLower();
             await _mqttClient.UnsubscribeAsync("omnirig/+/radio_info");
-            await SubscribeToMqttTopic();
-            SaveConfigToFile(); // Save the new setting to the config file
+            await SubscribeToMqttTopicAsync();
         }
+
+        if (!string.IsNullOrEmpty(_settings.AntennaSwitchIpAddress)) SaveConfigToFile();
     }
 
     private void SaveConfigToFile()
     {
         var config = new ConfigWrapper
         {
-            AntennaConfigs = _antennaConfigs.Select(ac => new AntennaConfig
-            {
-                Port = ac.Port,
-                AntennaName = ac.AntennaName,
-                Description = ac.Description,
-                Is160M = ac.Is160M,
-                Is80M = ac.Is80M,
-                Is40M = ac.Is40M,
-                Is30M = ac.Is30M,
-                Is20M = ac.Is20M,
-                Is17M = ac.Is17M,
-                Is15M = ac.Is15M,
-                Is12M = ac.Is12M,
-                Is10M = ac.Is10M,
-                Is6M = ac.Is6M
-            }).ToList(),
+            AntennaConfigs = _antennaConfigs.Take(_settings.AntennaPortCount > 0 ? _settings.AntennaPortCount : 6)
+                .Select(ac => new AntennaConfig
+                {
+                    Port = ac.Port,
+                    AntennaName = ac.AntennaName,
+                    Description = ac.Description,
+                    Is160M = ac.Is160M,
+                    Is80M = ac.Is80M,
+                    Is40M = ac.Is40M,
+                    Is30M = ac.Is30M,
+                    Is20M = ac.Is20M,
+                    Is17M = ac.Is17M,
+                    Is15M = ac.Is15M,
+                    Is12M = ac.Is12M,
+                    Is10M = ac.Is10M,
+                    Is6M = ac.Is6M
+                }).ToList(),
             Settings = new Settings
             {
                 BandDataIpAddress = _settings.BandDataIpAddress,
@@ -627,72 +559,111 @@ public partial class MainWindow : Window, IDisposable
                 MqttBrokerPort = _settings.MqttBrokerPort,
                 MqttUsername = _settings.MqttUsername,
                 MqttPassword = _settings.MqttPassword,
-                MqttTopic = _settings.MqttTopic,
+                CurrentMqttTopic = _settings.CurrentMqttTopic
             }
         };
 
-        var options = new JsonSerializerOptions { WriteIndented = true };
-        var jsonString = JsonSerializer.Serialize(config, options);
+        //var options = new JsonSerializerOptions { WriteIndented = true };
+        var jsonString = JsonSerializer.Serialize(config, _options);
+
+        Console.WriteLine($"Saving config to file: {_configPath}");
 
         Directory.CreateDirectory(Path.GetDirectoryName(_configPath) ??
                                   throw new InvalidOperationException(nameof(_configPath)));
         File.WriteAllText(_configPath, jsonString);
+
+        Console.WriteLine("Config saved successfully");
     }
 
     private void LoadConfigFromFile()
     {
-        if (!File.Exists(_configPath))
+        try
         {
-            SaveConfigToFile();
+            if (!File.Exists(_configPath))
+            {
+                Console.WriteLine($"Config file not found at {_configPath}. Creating a new one.");
+                SaveConfigToFile();
+                return;
+            }
+
+            var jsonString = File.ReadAllText(_configPath);
+
+            var config = JsonSerializer.Deserialize<ConfigWrapper>(jsonString, _options) ??
+                         throw new JsonException("Deserialized config is null");
+
+            UpdateAntennaConfigs(config.AntennaConfigs);
+            UpdateSettings(config.Settings);
+
+            UpdateAvailableAntennas();
+            Console.WriteLine("Config loaded successfully");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading config: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            MessageBox.Show(
+                $"Error loading configuration: {ex.Message}\n\nThe application will continue with default settings.",
+                "Configuration Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private void UpdateAntennaConfigs(List<AntennaConfig>? loadedConfigs)
+    {
+        if (loadedConfigs == null)
+        {
+            Console.WriteLine("Warning: AntennaConfigs is null in the loaded config");
             return;
         }
 
-        var jsonString = File.ReadAllText(_configPath);
-        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        var config = JsonSerializer.Deserialize<ConfigWrapper>(jsonString, options);
+        _antennaConfigs.Clear();
 
-        if (config?.AntennaConfigs != null)
+        var portCount = _settings.AntennaPortCount > 0 ? _settings.AntennaPortCount : 6;
+
+        for (var i = 1; i <= portCount; i++)
         {
-            _antennaConfigs.Clear();
-
-            foreach (var antennaConfig in config.AntennaConfigs)
-            {
-                var newConfig = new AntennaConfig
-                {
-                    Port = antennaConfig.Port,
-                    AntennaName = antennaConfig.AntennaName,
-                    Description = antennaConfig.Description,
-                    Is160M = antennaConfig.Is160M,
-                    Is80M = antennaConfig.Is80M,
-                    Is40M = antennaConfig.Is40M,
-                    Is30M = antennaConfig.Is30M,
-                    Is20M = antennaConfig.Is20M,
-                    Is17M = antennaConfig.Is17M,
-                    Is15M = antennaConfig.Is15M,
-                    Is12M = antennaConfig.Is12M,
-                    Is10M = antennaConfig.Is10M,
-                    Is6M = antennaConfig.Is6M
-                };
-                _antennaConfigs.Add(newConfig);
-            }
+            var existingConfig = loadedConfigs.FirstOrDefault(ac => ac.Port == $"{i}");
+            _antennaConfigs.Add(existingConfig ?? new AntennaConfig { Port = $"{i}" });
         }
 
-        if (config?.Settings != null)
+        Console.WriteLine($"Loaded {_antennaConfigs.Count} antenna configs");
+    }
+
+    private void UpdateSettings(Settings? loadedSettings)
+    {
+        if (loadedSettings == null)
         {
-            _settings.BandDataIpAddress = config.Settings.BandDataIpAddress;
-            _settings.BandDataIpPort = config.Settings.BandDataIpPort;
-            _settings.AntennaSwitchIpAddress = config.Settings.AntennaSwitchIpAddress;
-            _settings.AntennaSwitchPort = config.Settings.AntennaSwitchPort;
-            _settings.AntennaPortCount = config.Settings.AntennaPortCount;
-            _settings.HasMultipleInputs = config.Settings.HasMultipleInputs;
-            _settings.MqttBrokerAddress = config.Settings.MqttBrokerAddress;
-            _settings.MqttBrokerPort = config.Settings.MqttBrokerPort;
-            _settings.MqttUsername = config.Settings.MqttUsername;
-            _settings.MqttPassword = config.Settings.MqttPassword;
-            _settings.MqttTopic = config.Settings.MqttTopic ?? "Sporadic";
+            Console.WriteLine("Warning: Settings is null in the loaded config");
+            return;
         }
 
-        UpdateAvailableAntennas();
+        _settings.UpdateFrom(loadedSettings);
+
+        DataContext = null;
+        DataContext = _settings;
+
+        RecreateUdpMessageSender();
+        RecreateRelayManager();
+        UpdateMqttClientSettings();
+    }
+
+    private void RecreateUdpMessageSender()
+    {
+        _udpMessageSender.Dispose();
+        _udpMessageSender = new UdpMessageSender(_settings.AntennaSwitchIpAddress, _settings.AntennaSwitchPort);
+    }
+
+    private void RecreateRelayManager()
+    {
+        _relayManager?.Dispose();
+        _relayManager = new RelayManager(_udpMessageSender);
+    }
+
+    private void UpdateMqttClientSettings()
+    {
+        if (_mqttClient == null) return;
+
+        _mqttClient.Dispose();
+        InitializeMqttClientAsync().ConfigureAwait(false);
     }
 
     private void CancelAntennaConfig_Click(object sender, RoutedEventArgs e)
@@ -704,17 +675,12 @@ public partial class MainWindow : Window, IDisposable
 
     private async void MqttTopicComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (MqttTopicComboBox.SelectedItem is ComboBoxItem selectedItem)
-        {
-            await ChangeUpdateFrequency(selectedItem.Content.ToString());
-            MessageBox.Show($"MQTTT topic changed to {selectedItem.Content}", "Topic Changed", MessageBoxButton.OK,
-                MessageBoxImage.Information);
-        }
+        if (sender is ComboBox { SelectedItem: string selectedTopic }) await ChangeUpdateFrequency(selectedTopic);
     }
 
     private class ConfigWrapper
     {
-        public List<AntennaConfig> AntennaConfigs { get; set; }
-        public Settings Settings { get; set; }
+        public List<AntennaConfig> AntennaConfigs { get; set; } = [];
+        public Settings Settings { get; init; } = new();
     }
 }

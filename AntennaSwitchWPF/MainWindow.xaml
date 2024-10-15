@@ -4,9 +4,9 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AntennaSwitchWPF"
+        xmlns:relayController="clr-namespace:AntennaSwitchWPF.RelayController"
         mc:Ignorable="d"
-        Title="Antenna Switch" MinHeight="100" MinWidth="650"
-        SizeToContent="WidthAndHeight"
+        Title="Antenna Switch" Height="800" Width="1200" MinHeight="600" MinWidth="800" MaxHeight="1200" MaxWidth="1200"
         Background="#1E1E1E" d:DataContext="{d:DesignInstance Type=local:MainWindow}"
         WindowStartupLocation="CenterScreen">
     <Window.Effect>
@@ -210,7 +210,7 @@
         </ControlTemplate>
 
     </Window.Resources>
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -278,12 +278,11 @@
                                 </Grid>
 
                                 <Expander Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="4" Header="Radio Information"
-                                          IsExpanded="{Binding IsExpanderExpanded, Mode=TwoWay}"
                                           Margin="0,0,0,5"
                                           Background="#2D2D30" Foreground="#E0E0E0" BorderBrush="#3F3F3F"
                                           VerticalAlignment="Bottom"
-                                          Expanded="Expander_Expanded"
-                                          Collapsed="Expander_Collapsed">
+                                          Expanded="MainWindow_OnSizeChanged"
+                                          Collapsed="MainWindow_OnSizeChanged">
                                     <Grid Margin="10">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto" />
@@ -381,7 +380,7 @@
                                         <TextBlock x:Name="CurrentlySelectedRelayLabel"
                                                    Text="{Binding CurrentlySelectedRelay}"
                                                    Grid.Row="4" Grid.Column="3" Margin="0,0,0,10"
-                                                   d:DataContext="{d:DesignInstance local:RelayManager}" />
+                                                   d:DataContext="{d:DesignInstance relayController:RelayManager}" />
                                     </Grid>
                                 </Expander>
                             </Grid>
@@ -468,11 +467,8 @@
                                 <Label Content="MQTT Topic:" Grid.Row="7" Grid.Column="0" Margin="0,5,10,5" />
                                 <ComboBox x:Name="MqttTopicComboBox" Text="" Grid.Row="7" Grid.Column="1"
                                           Margin="0,5,0,5" SelectionChanged="MqttTopicComboBox_SelectionChanged"
-                                          SelectedItem="Frequent"
                                           Background="#2D2D30" Foreground="#E0E0E0" BorderBrush="#3F3F3F"
                                           d:DataContext="{d:DesignInstance local:MainWindow }">
-                                    <ComboBoxItem Content="Frequent"></ComboBoxItem>
-                                    <ComboBoxItem Content="Sporadic"></ComboBoxItem>
                                     <ComboBox.ItemContainerStyle>
                                         <Style TargetType="ComboBoxItem">
                                             <Setter Property="Background" Value="#2D2D30" />
@@ -507,7 +503,8 @@
                                 Background="#2D2D30">
                             <DataGrid x:Name="PortGrid" AutoGenerateColumns="False" CanUserAddRows="False"
                                       CanUserDeleteRows="False" HeadersVisibility="Column"
-                                      Background="#1E1E1E" Foreground="#E0E0E0" BorderBrush="#3F3F3F">
+                                      Background="#1E1E1E" Foreground="#E0E0E0" BorderBrush="#3F3F3F" 
+                                      Width="Auto" Height="Auto" MaxHeight="600" VerticalScrollBarVisibility="Auto">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Port" Binding="{Binding Port}" IsReadOnly="True"
                                                         Width="Auto" SortMemberPath="Port">
@@ -519,7 +516,7 @@
                                             </Style>
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
-                                    <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*">
+                                    <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="Auto">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="VerticalAlignment" Value="Center" />

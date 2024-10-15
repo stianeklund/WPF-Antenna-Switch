@@ -1,11 +1,11 @@
-using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace AntennaSwitchWPF;
 
-public class UdpMessageSender : IDisposable
+public class UdpMessageSender : IUdpMessageSender, IDisposable
 {
     private readonly string _ipAddress;
     private readonly int _port;
@@ -24,12 +24,15 @@ public class UdpMessageSender : IDisposable
         _client.Client.Bind(new IPEndPoint(IPAddress.Any, 0));
     }
 
+    /*public UdpMessageSender() {
+    }*/
+
     public async Task<string> SendMessageAndReceiveResponseAsync(string message, CancellationToken cancellationToken = default)
     {
         await _semaphore.WaitAsync(cancellationToken);
         try
         {
-            for (int attempt = 0; attempt < MaxRetries; attempt++)
+            for (var attempt = 0; attempt < MaxRetries; attempt++)
             {
                 try
                 {
@@ -62,6 +65,12 @@ public class UdpMessageSender : IDisposable
         {
             _semaphore.Release();
         }
+    }
+
+    public async Task<bool> SendCommandAndValidateResponseAsync(string command, string expectedResponsePattern, CancellationToken cancellationToken = default)
+    {
+        var response = await SendMessageAndReceiveResponseAsync(command, cancellationToken);
+        return Regex.IsMatch(response, expectedResponsePattern);
     }
 
     public void Dispose()
